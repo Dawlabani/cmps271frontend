@@ -1,0 +1,148 @@
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow-y: auto; /* Enable scrolling for the overlay */
+}
+
+.modal-content {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  max-width: 500px;
+  width: 90%;
+  max-height: 90%; /* Limit the height of the modal */
+  overflow-y: auto; /* Enable scrolling for the modal/* Add this to AddExpense.css */
+}
+
+  body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 0;
+  }
+
+  .container {
+      width: 80%;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #fff;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      border-radius: 8px;
+  }
+
+  h1 {
+      text-align: center;
+      color: #333;
+  }
+
+  form {
+      display: flex;
+      flex-direction: column;
+  }
+
+  label {
+      margin-bottom: 5px;
+      color: #555;
+  }
+
+  label select {
+      border: 1px solid #ccc;
+  }
+
+  input, select, textarea {
+      margin-bottom: 15px;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 16px;
+  }
+
+    .Details {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+  } 
+
+  .question-buttons {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+
+  .selected, .unselected {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 25px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 0.3s ease;
+    width: 100px;
+  }
+
+  .selected {
+    background-color: var(--secondary);
+    color: #fff;
+  }
+
+  .unselected {
+    background-color: #ccc;
+    color: #fff;
+  }
+
+  .selected:hover, unselected:hover {
+    background-color: #019875;
+  }
+
+
+  .actions {
+    align-self: center;
+  }
+
+  .save-btn, .cancel-btn{
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 25px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 0.3s ease;
+    width: 100px;
+  }
+  
+  .save-btn {
+    background-color: var(--secondary);
+    color: #fff;
+  }
+  
+  .save-btn:hover {
+    background-color: #019875;
+  }
+
+  .save-btn:disabled {
+      background-color: #ccc;
+      color: #fff;
+      cursor: not-allowed;
+  }
+  
+  .cancel-btn {
+    background-color: #e74c3c;
+    color: #fff;
+  }
+  
+  .cancel-btn:hover {
+    background-color: #c0392b;
+  }
+
+
+  .error {
+      color: red;
+      margin-bottom: 15px;
+  }

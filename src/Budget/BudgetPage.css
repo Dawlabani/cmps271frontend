@@ -1,0 +1,96 @@
+/* BudgetPage.css */
+
+/* Overall container styling */
+.container {
+  /* Remove large margins so the container can go edge-to-edge */
+  width: 100%;
+  margin: 0;
+  padding: 1rem;
+}
+
+.budget-page {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh; /* Ensure it takes the full height of the viewport */
+}
+
+.budget-page-content {
+  /* Full width */
+  width: 65%;
+  margin: 0 auto; /* Center horizontally */
+  text-align: center; /* Center text content */
+}
+
+@media (max-width: 992px) {
+  .budget-page-content {
+    width: 80% ;
+  }
+}
+
+/* Page header styling */
+.budget-page-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.budget-page-header h1 {
+  font-size: 2.5rem;
+  color: var(--primary);
+  margin-bottom: 0.5rem;
+  margin-top: 2rem;
+}
+
+.budget-page-header p {
+  font-size: 1.2rem;
+  font-weight: 400;
+  color: var(--secondary);
+}
+
+/* Manager and expenses sections */
+.manager-section,
+.expenses-section {
+  background: var(--light);
+  padding: 2rem;
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  margin-bottom: 2rem;
+}
+
+.save-btn {
+  background-color: #38a169;
+  color: #fff;
+  font-weight: 600;
+  font-size: 1rem;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+  align-self: center;
+}
+
+.save-btn:hover {
+  background-color: #2f855a;
+}
+
+.save-btn:active {
+  transform: translateY(1px);
+}
+
+.manager-section h2,
+.expenses-section h2 {
+  font-size: 1.8rem;
+  color: var(--primary);
+  margin-bottom: 1rem;
+}
+
+/* Example theme variables if not defined globally */
+:root {
+  --primary: #2d3436;
+  --secondary: #00b894;
+  --light: #ffffff;
+  --background: #f4f4f4;
+  --shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}

@@ -1,0 +1,70 @@
+/* EmpowermentSection.css */
+
+/* Container for the entire Empowerment Section */
+.empowerment-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 1.5rem;
+  }
+  
+  /* Section heading */
+  .empowerment-section h2 {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+    font-weight: 600;
+    color: var(--primary, #2d3436);
+  }
+  
+  /* Intro paragraph */
+  .empowerment-section p {
+    max-width: 600px;
+    font-size: 1rem;
+    margin: 0 auto 2rem;
+    line-height: 1.6;
+    color: var(--primary, #2d3436);
+    font-weight: 300;
+  }
+  
+  /* Container for feature cards */
+  .empowerment-features {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    justify-content: center;
+  }
+  
+  /* Individual empowerment card */
+  .empowerment-card {
+    background: var(--light, #ffffff);
+    border-radius: 12px;
+    box-shadow: var(--shadow, 0 4px 12px rgba(0, 0, 0, 0.15));
+    padding: 1.5rem;
+    flex: 1 1 250px;
+    min-width: 250px;
+    transition: transform 0.3s ease;
+    text-align: left;
+  }
+  
+  /* Subtle hover effect */
+  .empowerment-card:hover {
+    transform: translateY(-4px);
+  }
+  
+  /* Card heading */
+  .empowerment-card h3 {
+    font-size: 1.3rem;
+    margin-bottom: 0.5rem;
+    color: var(--secondary, #00b894);
+    font-weight: 600;
+  }
+  
+  /* Card paragraph */
+  .empowerment-card p {
+    font-size: 0.95rem;
+    color: var(--primary, #2d3436);
+    line-height: 1.4;
+    margin: 0;
+  }
+  

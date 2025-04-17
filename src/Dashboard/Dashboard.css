@@ -1,0 +1,100 @@
+/* Dashboard.css */
+
+/* Global Theme Variables */
+:root {
+  --primary: #2d3436;
+  --secondary: #00b894;
+  --accent: #f39c12;
+  --light: #ffffff;
+  --background: #e8f5e9;  /* Changed to a light green hue */
+  --shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  --transition-speed: 0.3s;
+}
+
+/* Container for consistent layout */
+.container {
+  /* Remove large margins so the container can go edge-to-edge */
+  width: 100%;
+  margin: 0;
+  padding: 1rem;
+}
+
+/* Dashboard overall layout */
+.dashboard {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: var(--background);
+  background: var(--background);
+}
+
+.dashboard-content {
+  flex: 1;
+  padding: 2rem 0;
+}
+
+/* Dashboard Header */
+.dashboard-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.dashboard-header h1 {
+  font-size: 2.5rem;
+  color: var(--primary);
+  margin-bottom: 0.5rem;
+  letter-spacing: 0.5px;
+}
+
+.dashboard-header p {
+  font-size: 1.2rem;
+  font-weight: 400;
+  color: var(--secondary);
+}
+
+/* Summary, Transactions, Rewards sections as "cards" */
+.summary-section,
+.transactions-section,
+.rewards-section {
+  background: var(--light);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  margin-bottom: 2rem;
+  padding: 2rem;
+}
+
+/* Charts Section: Switch to a grid-based layout */
+.charts-section {
+  margin-bottom: 2rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 2rem;
+}
+
+/* Each chart container is now a "card" with enough space */
+.chart-container {
+  background: var(--light);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* Chart Container Title */
+.chart-container h2 {
+  text-align: center;
+  font-size: 1.8rem;
+  color: var(--primary);
+  margin-bottom: 1rem;
+}
+
+/* Additional styling for transaction & reward headings */
+.transactions-section h2,
+.rewards-section h2 {
+  text-align: center;
+  font-size: 1.8rem;
+  color: var(--primary);
+  margin-bottom: 1rem;
+}

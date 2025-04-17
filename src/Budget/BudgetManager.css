@@ -1,0 +1,71 @@
+/* BudgetManager.css */
+
+/* Main container styling */
+.budget-manager {
+    width: 100%;
+    margin: 0 0 2rem 0;
+    border-radius: 16px;
+    text-align: center;
+  }
+  
+  /* Title and subtitle styling */
+  .bm-title {
+    font-size: 2rem;
+    color: var(--primary, #2d3436);
+    margin-bottom: 0.5rem;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  }
+  
+  .bm-subtitle {
+    font-size: 1.1rem;
+    font-weight: 400;
+    color: var(--secondary, #00b894);
+    margin-bottom: 1.5rem;
+  }
+  
+  /* Container for the input fields */
+  .bm-inputs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    justify-content: center;
+  }
+  
+  /* Individual input item */
+  .bm-item {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    width: 250px;
+  }
+  
+  /* Label styling */
+  .bm-label {
+    font-size: 1rem;
+    color: var(--primary, #2d3436);
+    margin-bottom: 0.5rem;
+  }
+  
+  /* Input field styling */
+  .bm-input {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  }
+  
+  .bm-input:focus {
+    border-color: var(--secondary, #00b894);
+    box-shadow: 0 0 5px rgba(0, 184, 148, 0.4);
+  }
+  
+  /* Global theme fallbacks if not defined */
+  :root {
+    --primary: #2d3436;
+    --secondary: #00b894;
+    --light: #ffffff;
+    --shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+  

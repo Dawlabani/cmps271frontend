@@ -1,0 +1,76 @@
+/* ImpactOverview.css */
+
+/* Main container for the Impact Overview section */
+.impact-overview {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  
+  /* Section heading */
+  .impact-overview h2 {
+    font-size: 2rem;
+    margin-bottom: 1.5rem;
+    font-weight: 600;
+    color: var(--primary, #2d3436);
+  }
+  
+  /* Intro paragraph */
+  .impact-overview p {
+    max-width: 600px;
+    margin: 0 auto 2rem;
+    font-size: 1rem;
+    line-height: 1.6;
+    font-weight: 300;
+    color: var(--primary, #2d3436);
+  }
+  
+  /* Container for impact stats (cards) */
+  .impact-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    justify-content: center;
+  }
+  
+  /* Individual impact card */
+  .impact-card {
+    background-color: var(--light, #ffffff);
+    border-radius: 12px;
+    box-shadow: var(--shadow, 0 4px 12px rgba(0, 0, 0, 0.15));
+    padding: 1.5rem;
+    text-align: center;
+    transition: transform 0.3s ease;
+    flex: 1 1 200px;
+    min-width: 200px;
+  }
+  
+  /* Subtle hover effect */
+  .impact-card:hover {
+    transform: translateY(-4px);
+  }
+  
+  /* Card heading */
+  .impact-card h3 {
+    font-size: 1.2rem;
+    margin-bottom: 0.5rem;
+    color: var(--secondary, #00b894);
+    font-weight: 600;
+  }
+  
+  /* Main metric in the card (e.g., CO2, Water Saved, etc.) */
+  .impact-card p {
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+    color: var(--primary, #2d3436);
+  }
+  
+  /* Subtext or additional info */
+  .impact-card small {
+    font-size: 0.8rem;
+    color: var(--primary, #2d3436);
+    opacity: 0.7;
+  }
+  

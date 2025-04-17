@@ -1,0 +1,97 @@
+/* RecentTransactions.css */
+
+/* Container for the entire recent-transactions section */
+.recent-transactions {
+    background: var(--light);
+    padding: 1rem;
+    border-radius: 16px;
+    width: 100%;
+    margin-bottom: 2rem;
+  }
+  
+  /* Header area for the recent transactions */
+  .transactions-header {
+    margin-bottom: 1rem;
+  }
+  
+  .transactions-header h2 {
+    font-size: 1.8rem;
+    color: var(--primary);
+    margin-bottom: 0.25rem;
+  }
+  
+  .transactions-subtitle {
+    color: var(--secondary);
+    font-size: 1rem;
+    margin-bottom: 0;
+  }
+  
+  /* Main table styling */
+  .transactions-table {
+    width: 80%;
+    border-collapse: collapse;
+    border-radius: 16px; /* Ensures the table has a full border-radius */
+    box-shadow: var(--shadow);
+    overflow: hidden; /* Prevents rows from exceeding the table's border-radius */
+    background: #fff;
+    margin: 0 auto; /* Centers the table horizontally */
+  }
+  
+  .transactions-table thead .header-row {
+    background: #f2f2f2;
+    
+  }
+  
+  /* Table cells */
+  .transactions-table th,
+  .transactions-table td {
+    padding: 0.75rem 1rem;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+  
+    font-size: 0.95rem;
+    white-space: nowrap; /* Prevents text from wrapping, ensures horizontal scroll if needed */
+  }
+  
+  .transactions-table th {
+    color: #555;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  /* Table body rows */
+  .transactions-row {
+    transition: background-color 0.2s ease;
+    border-radius: 0; /* Default border-radius for rows */
+  }
+  
+  .transactions-row:hover {
+    background-color: #fafafa;
+    border-radius: 16px; /* Rows turn border-radius 16px on hover */
+  }
+  
+  /* Individual cells */
+  .transaction-cell {
+    color: var(--primary);
+    transition: color var(--transition-speed);
+  }
+  
+  .transaction-cell:hover {
+    color: var(--secondary);
+  }
+  
+  .no-transaction {
+    text-align: center;
+    padding: 1rem;
+    font-size: 1.2rem;
+    color: var(--primary);
+  }
+  /* Responsive Adjustments */
+  @media (max-width: 600px) {
+    .transactions-table th,
+    .transactions-table td {
+      font-size: 0.85rem;
+      padding: 0.5rem;
+    }
+  }

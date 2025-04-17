@@ -1,0 +1,227 @@
+/* ExpensesManager.css */
+
+/* Main container for the expenses manager */
+.expenses-manager {
+  width: 100%;
+  margin: 0 0 2rem 0;
+  background: var(--light, #ffffff);
+  border-radius: 16px;
+  text-align: center;
+  /* Existing layout properties */
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* filers styling */
+
+.filters {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+}
+
+@media (max-width: 768px) {
+  .filters {
+    flex-direction: column;
+  }
+}
+
+.sort, .sortOrder, .category {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.sort label, .sortOrder, .category label {
+  font-size: 1rem;
+  color: var(--primary);
+}
+
+.category select {
+  padding: 0.3rem;
+  width: 255px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  margin-top: 1px;
+  text-align: center;
+}
+
+.sort select {
+  padding: 0.3rem;
+  width: 100px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  margin-top: 1px;
+  text-align: center;
+}
+
+.sortOrder select {
+  padding: 0.3rem;
+  width: 120px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  margin-top: 1px;
+  text-align: center;
+}
+
+  /* search expense */
+
+  .Search {
+    align-self: center;
+    gap: 1rem;
+    height: 50px;
+
+  }
+
+  .Search input {
+    padding: 0.3rem;
+    width: 255px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    margin-top: 1px;
+    text-align: center;
+  }
+
+/* Table wrapper for potential horizontal scrolling on small screens */
+.table-wrapper {
+  overflow-x: auto;
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+}
+
+/* Main table styling */
+.expenses-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--light);
+  border-radius: 8px;
+}
+
+.table-header-row {
+  background: #f2f2f2;
+}
+
+.expenses-table th,
+.expenses-table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #ddd;
+  text-align: center;
+  font-size: 0.95rem;
+  color: var(--primary);
+}
+
+.expense-table th {
+    display: flex;
+  justify-content: center;
+}
+.expense-table td {
+  display: flex;
+justify-content: center;
+}
+
+.expense-row:hover {
+  background-color: #fafafa;
+}
+
+/* Action buttons in each row */
+.row-actions {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.edit-btn,
+.remove-btn, 
+.add-btn {
+  padding: 0.4rem 0.8rem;
+  border: none;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+  width : 75px;
+  text-align: center;
+}
+
+.edit-btn {
+  background-color: var(--secondary);
+  color: #fff;
+  margin-top: 20px;
+}
+
+.edit-btn:hover {
+  background-color: #019875;
+  transform: scale(1.03);
+}
+
+.remove-btn {
+  background-color: #e74c3c;
+  color: #fff;
+  margin-top: 20px;
+
+}
+
+.remove-btn:hover {
+  background-color: #c0392b;
+  transform: scale(1.03);
+}
+
+.no-expenses {
+  font-size: 1.2rem;
+  color: var(--primary);
+  margin-top: 1rem;
+}
+
+.add-btn {
+  background-color: var(--secondary);
+  color: #fff;
+  margin-top: 30px;
+}
+
+.add-btn:hover {
+  background-color: #019875;
+  transform: scale(1.03);
+}
+
+/* Pagination controls */
+.pagination {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1rem;
+  justify-content: center;
+}
+
+.pagination button {
+  padding: 0.6rem 0.6rem;
+  border: none;
+  border-radius: 20px;
+  background-color: var(--secondary);
+  color: #fff;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  width: 100px;
+  text-align: center;
+}
+
+.pagination button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.pagination span {
+  color: var(--primary);
+  font-size: 0.9rem;
+}
+
+/* Example theme variables if not defined globally */
+:root {
+  --primary: #2d3436;
+  --secondary: #00b894;
+  --light: #ffffff;
+  --shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}

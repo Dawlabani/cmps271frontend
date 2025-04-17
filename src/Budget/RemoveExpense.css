@@ -1,0 +1,35 @@
+/* RemoveExpense.css */
+
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+p {
+    margin-bottom: 20px;
+    color: #333;
+}
+
+.actions button {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 25px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 0.3s ease;
+    width: 100px;
+}
+.delete-btn{
+    background-color: var(--secondary);
+    color: white;
+    cursor: pointer;
+}
+
+.delete-btn:hover {
+    background-color: #019875;
+}
