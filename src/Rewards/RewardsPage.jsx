@@ -1,167 +1,122 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { getProfile, getRewards, redeemReward } from '../services/api';
 import './RewardsPage.css';
 
-function RewardsPage() {
+export default function RewardsPage() {
   const [rewards, setRewards] = useState([]);
-  const [userPoints, setUserPoints] = useState(0); // from the DB now
+  const [userPoints, setUserPoints] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const [isRedeeming, setIsRedeeming] = useState(false);
-  const [redeemedCode, setRedeemedCode] = useState('');
+  const [redeemCode, setRedeemCode] = useState('');
   const [redeemedReward, setRedeemedReward] = useState(null);
-  const [showRedeemBox, setShowRedeemBox] = useState(false);
+  const [showRedeemModal, setShowRedeemModal] = useState(false);
 
-  // Fetch user profile & rewards in parallel or sequentially
+  // Load profile points and available rewards
   useEffect(() => {
     async function fetchData() {
       try {
-        const token = localStorage.getItem('token');
-        if (!token) throw new Error('No token found');
-
-        // 1) Fetch user profile to get up-to-date points
-        const profileRes = await fetch('/profile', {
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          }
-        });
-        if (!profileRes.ok) {
-          throw new Error('Failed to fetch user profile.');
-        }
-        const userData = await profileRes.json();
-        setUserPoints(userData.points);
-
-        // 2) Fetch rewards
-        const rewardsRes = await fetch('/rewards', {
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          }
-        });
-        if (!rewardsRes.ok) {
-          throw new Error('Failed to fetch rewards.');
-        }
-        const rewardsData = await rewardsRes.json();
-        setRewards(rewardsData);
-
+        const [{ data: profile }, { data: rewardsList }] = await Promise.all([
+          getProfile(),
+          getRewards()
+        ]);
+        setUserPoints(profile.points);
+        setRewards(Array.isArray(rewardsList) ? rewardsList : []);
       } catch (err) {
         console.error(err);
-        setError(err.message);
+        setError(err.message || 'Failed to load rewards');
       } finally {
         setLoading(false);
       }
     }
-
     fetchData();
   }, []);
 
-  // Redeem a reward by POSTing to /rewards/redeem
-  const handleRedeemReward = async (reward) => {
+  // Handle redeem action
+  const handleRedeem = async (reward) => {
     if (userPoints < reward.points) {
-      // Not enough points
-      setRedeemedReward(null);
-      setIsRedeeming(true);
-      setShowRedeemBox(false);
+      setError('Not enough points to redeem this reward.');
       return;
     }
-
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch('/rewards/redeem', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ rewardId: reward.id }),
-      });
-      const data = await res.json();
-
-      if (data.success) {
-        // Update local userPoints to reflect DB
-        setUserPoints(data.newPoints);
-        setRedeemedCode(data.code);
-        setRedeemedReward(reward);
-        setShowRedeemBox(true);
-      } else {
-        alert(data.message);
-      }
-      setIsRedeeming(true);
+      const { data } = await redeemReward(reward.id);
+      setUserPoints(data.newPoints);
+      setRedeemCode(data.code);
+      setRedeemedReward(reward);
+      setShowRedeemModal(true);
     } catch (err) {
-      console.error('Error redeeming reward:', err);
-      setError(err.message);
+      console.error(err);
+      setError(err.response?.data?.message || 'Redeem failed');
     }
   };
 
-  const handleDone = () => {
-    setShowRedeemBox(false);
-    setIsRedeeming(false);
+  const closeModal = () => {
+    setShowRedeemModal(false);
+    setRedeemCode('');
+    setRedeemedReward(null);
+    setError(null);
   };
+
+  if (loading) return <div className="rewards-page"><p>Loading...</p></div>;
+  if (error)   return <div className="rewards-page"><p className="error">{error}</p></div>;
 
   return (
     <div className="rewards-page">
-      <motion.div className="rewards-content"       
-        initial={{ opacity: 0, y: 20 }}
+      <motion.header
+        className="rewards-header"
+        initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: 'easeOut' }}
       >
-        <header className="rewards-header">
-          <h1>Redeem Your Rewards</h1>
-          <p>Use your points for rewards!</p>
-          <h2 className="points-available">You have {userPoints} points!</h2>
-        </header>
+        <h1>Redeem Your Rewards</h1>
+        <p>You have <strong>{userPoints}</strong> points</p>
+      </motion.header>
 
-        {loading ? (
-          <p>Loading rewards...</p>
-        ) : error ? (
-          <p className='ErrorMessage'>Error: {error}</p>
-        ) : rewards.length > 0 ? (
-          <section className="rewards-list">
-            {rewards.map((reward) => (
-              <div key={reward.id} className="reward-card">
-                <img
-                  src={reward.image}
-                  alt={reward.name}
-                  onError={(e) => (e.target.src = 'https://via.placeholder.com/150?text=No+Image')}
-                />
+      <motion.section
+        className="rewards-list"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.2 }}
+      >
+        {rewards.length === 0 ? (
+          <p>No rewards available.</p>
+        ) : (
+          rewards.map(reward => (
+            <div key={reward.id} className="reward-card">
+              <img
+                src={reward.image}
+                alt={reward.name}
+                onError={e => e.target.src = 'https://via.placeholder.com/150'}
+              />
+              <div className="reward-info">
                 <h2>{reward.name}</h2>
                 <p>{reward.description}</p>
-                <p>{reward.points} pts</p>
-                <button className="redeem-btn" onClick={() => handleRedeemReward(reward)}>Redeem</button>
+                <p className="points-cost">{reward.points} pts</p>
+                <button
+                  onClick={() => handleRedeem(reward)}
+                  disabled={userPoints < reward.points}
+                >
+                  Redeem
+                </button>
               </div>
-            ))}
-          </section>
-        ) : (
-          <p>No rewards available.</p>
+            </div>
+          ))
         )}
-      </motion.div>
+      </motion.section>
 
-      {isRedeeming && showRedeemBox && redeemedReward && (
+      {showRedeemModal && redeemedReward && (
         <div className="redeem-modal">
           <div className="redeem-content">
             <h3>Congrats! You redeemed {redeemedReward.name}</h3>
             <img
-              src={`https://bwipjs-api.metafloor.com/?bcid=code128&text=${redeemedCode}`}
-              alt="Barcode"
+              src={`https://bwipjs-api.metafloor.com/?bcid=code128&text=${redeemCode}`}
+              alt="Redeem barcode"
             />
-            <p>Your code: {redeemedCode}</p>
-            <button onClick={handleDone}>Done</button>
-          </div>
-        </div>
-      )}
-
-      {isRedeeming && !showRedeemBox && (
-        <div className="redeem-modal">
-          <div className="redeem-content">
-            <h3>Not enough points!</h3>
-            <button onClick={handleDone}>Okay</button>
+            <p>Code: <strong>{redeemCode}</strong></p>
+            <button onClick={closeModal}>Close</button>
           </div>
         </div>
       )}
     </div>
   );
 }
-
-export default RewardsPage;
