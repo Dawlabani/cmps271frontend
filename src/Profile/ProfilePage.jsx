@@ -212,8 +212,159 @@ function ProfilePage() {
 
   return (
     <div className="profile-page">
-      {/* rest of the rendering unchanged, using profile.goals safely */}
-      {/* ... */}
+      <h1 className="main-heading">My Finance Dashboard</h1>
+      <p className="main-subheading">Welcome to your personal finance portal</p>
+      <div className="profile-dashboard">
+        <div className="dashboard-left">
+          <div className="profile-info-card glass-card">
+            <div className="profile-info-header">
+              <img src={profile.avatar} alt="Profile" className="profile-avatar" />
+              <div>
+                <h2 className="profile-name">{profile.name}</h2>
+                <p className="profile-location">{profile.location}</p>
+              </div>
+            </div>
+            <div className="profile-contact">
+              <h3 className="contact-heading">Email</h3>
+              <p className="profile-email">{profile.email}</p>
+              <h3 className="contact-heading">Bio</h3>
+              <p className="profile-bio">{profile.bio}</p>
+            </div>
+            <button className="btn edit-profile-btn" onClick={() => setIsEditProfileModalOpen(true)}>
+              Edit Profile
+            </button>
+          </div>
+          <div className="profile-eco glass-card">
+            <p>
+              Eco-conscious since {profile.createdAt ? new Date(profile.createdAt).toLocaleDateString() : 'N/A'}!
+              &nbsp;You currently have {profile.points} points.
+            </p>
+          </div>
+        </div>
+        <div className="dashboard-right">
+          <div className="profile-stats glass-card">
+            <h2>My Stats</h2>
+            <div className="stats-grid">
+              <div className="stat-card">
+                <h3>Expenses Logged</h3>
+                <p>{expenseCount}</p>
+              </div>
+              <div className="stat-card">
+                <h3>Rewards Redeemed</h3>
+                <p>{redeemedRewardCount}</p>
+              </div>
+            </div>
+          </div>
+          <div className="profile-goals glass-card">
+            <h2>Goals & Milestones</h2>
+            <div className="goals-list">
+              {(Array.isArray(profile.goals) ? profile.goals : []).map((goal, idx) => (
+                <div className="goal-item" key={idx}>
+                  <div className="goal-text">
+                    <h4>{goal.title}</h4>
+                    <p>Progress: {goal.progress}</p>
+                    {goal.achieved && <p className="goal-achieved">Achieved</p>}
+                  </div>
+                  <div className="goal-buttons">
+                    <button className="btn goal-edit-btn" onClick={() => openEditGoalModal(idx)}>
+                      Edit
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <button className="btn add-goal-btn" onClick={() => setIsAddGoalModalOpen(true)}>
+              Add Goal
+            </button>
+          </div>
+          <div className="sign-out-card">
+            <button className="sign-out-btn" onClick={handleSignOut} aria-label="Sign out of your account">
+              Sign Out
+            </button>
+          </div>
+        </div>
+      </div>
+      {isEditProfileModalOpen && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <h3>Edit Profile</h3>
+            <form onSubmit={handleEditProfileSubmit} className="modal-form">
+              <label>Name:</label>
+              <input type="text" name="name" value={profile.name} onChange={handleProfileInputChange} required />
+              <label>Email:</label>
+              <input type="email" name="email" value={profile.email} onChange={handleProfileInputChange} required />
+              <label>Location:</label>
+              <input type="text" name="location" value={profile.location} onChange={handleProfileInputChange} required />
+              <label>Bio:</label>
+              <textarea name="bio" value={profile.bio} onChange={handleProfileInputChange} required></textarea>
+              <label htmlFor="avatar-upload" style={{ cursor: 'pointer', color: 'var(--secondary)' }}>
+                Change Profile Picture
+              </label>
+              <input id="avatar-upload" type="file" accept="image/*" onChange={handleAvatarChange} style={{ display: 'none' }} />
+              <button type="button" className="btn modal-submit-btn" onClick={handleRemoveAvatar}>
+                Remove Profile Picture
+              </button>
+              <div className="modal-buttons">
+                <button type="submit" className="btn modal-submit-btn">
+                  Save Changes
+                </button>
+                <button type="button" className="btn modal-cancel-btn" onClick={() => setIsEditProfileModalOpen(false)}>
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+      {isAddGoalModalOpen && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <h3>Add Goal</h3>
+            <form onSubmit={handleAddGoalSubmit} className="modal-form">
+              <label>Goal Title:</label>
+              <input type="text" placeholder="Goal Title" value={newGoal.title} onChange={(e) => setNewGoal({ ...newGoal, title: e.target.value })} required />
+              <label>Progress:</label>
+              <input type="text" placeholder="Progress" value={newGoal.progress} onChange={(e) => setNewGoal({ ...newGoal, progress: e.target.value })} required />
+              <div className="modal-buttons">
+                <button type="submit" className="btn modal-submit-btn">
+                  Add Goal
+                </button>
+                <button type="button" className="btn modal-cancel-btn" onClick={() => setIsAddGoalModalOpen(false)}>
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+      {isEditGoalModalOpen && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <h3>Edit Goal</h3>
+            <form onSubmit={handleEditGoalSubmit} className="modal-form">
+              <label>Goal Title:</label>
+              <input type="text" name="title" value={editGoalData.title} onChange={handleEditGoalInputChange} required />
+              <label>Progress:</label>
+              <input type="text" name="progress" value={editGoalData.progress} onChange={handleEditGoalInputChange} required />
+              <label>
+                <input type="checkbox" name="achieved" checked={editGoalData.achieved} onChange={handleEditGoalInputChange} />{' '}
+                Mark as Achieved
+              </label>
+              <div className="modal-buttons">
+                <button type="submit" className="btn modal-submit-btn">
+                  Save Changes
+                </button>
+                <button type="button" className="btn modal-cancel-btn" onClick={() => setIsEditGoalModalOpen(false)}>
+                  Cancel
+                </button>
+                <button type="button" className="btn modal-cancel-btn" onClick={handleRemoveGoalInEdit}>
+                  Remove Goal
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
