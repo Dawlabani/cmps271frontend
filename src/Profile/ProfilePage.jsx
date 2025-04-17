@@ -130,20 +130,28 @@ function ProfilePage() {
   const handleAddGoalSubmit = async (e) => {
     e.preventDefault();
     if (!newGoal.title || !newGoal.progress) return;
+  
+    const updatedGoals = [
+      ...normalizeGoals(profile.goals),
+      { ...newGoal, achieved: false },
+    ];
+  
     try {
-      const goals = [
-        ...normalizeGoals(profile.goals),
-        { ...newGoal, achieved: false },
-      ];
-      const { data } = await updateProfile({ ...profile, goals });
-      data.goals = normalizeGoals(data.goals);
-      setProfile(data);
+      // Send the updated goals array to the server
+      await updateProfile({ ...profile, goals: updatedGoals });
+  
+      // Re-fetch the full profile so we get the server’s authoritative data
+      const resp = await getProfile();
+      resp.data.goals = normalizeGoals(resp.data.goals);
+      setProfile(resp.data);
+  
+      // Clear and close
       setNewGoal({ title: '', progress: '' });
       setIsAddGoalModalOpen(false);
     } catch (err) {
       console.error('Failed to add goal:', err);
     }
-  };
+  };  
 
   const openEditGoalModal = (idx) => {
     setEditingGoalIndex(idx);
