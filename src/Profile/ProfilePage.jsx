@@ -29,7 +29,6 @@ function ProfilePage() {
     goals: [],
   });
   const [loading, setLoading] = useState(true);
-
   const [expenseCount, setExpenseCount] = useState(0);
   const [redeemedRewardCount, setRedeemedRewardCount] = useState(0);
 
@@ -68,7 +67,6 @@ function ProfilePage() {
   ------------------------------------------------------------------ */
   useEffect(() => {
     if (!isLoggedIn) return;
-
     (async () => {
       try {
         const { data } = await getProfile();
@@ -84,7 +82,6 @@ function ProfilePage() {
 
   useEffect(() => {
     if (!isLoggedIn) return;
-
     (async () => {
       try {
         const expensesRes = await getExpenses();
@@ -231,9 +228,8 @@ function ProfilePage() {
       </p>
 
       <div className="profile-dashboard">
-        {/* ------------ LEFT COLUMN ------------- */}
+        {/* LEFT COLUMN */}
         <div className="dashboard-left">
-          {/* profile card */}
           <div className="profile-info-card glass-card">
             <div className="profile-info-header">
               <img
@@ -246,22 +242,18 @@ function ProfilePage() {
                 <p className="profile-location">{profile.location}</p>
               </div>
             </div>
-
             <div className="profile-contact">
               <h3>Email</h3>
               <p>{profile.email}</p>
               <h3>Bio</h3>
               <p>{profile.bio}</p>
             </div>
-
             <button
               className="btn edit-profile-btn"
               onClick={() => setIsEditProfileModalOpen(true)}>
               Edit Profile
             </button>
           </div>
-
-          {/* eco points */}
           <div className="profile-eco glass-card">
             Eco‑conscious since{' '}
             {profile.createdAt
@@ -271,9 +263,8 @@ function ProfilePage() {
           </div>
         </div>
 
-        {/* ------------ RIGHT COLUMN ------------- */}
+        {/* RIGHT COLUMN */}
         <div className="dashboard-right">
-          {/* Stats */}
           <div className="profile-stats glass-card">
             <h2>My Stats</h2>
             <div className="stats-grid">
@@ -288,7 +279,6 @@ function ProfilePage() {
             </div>
           </div>
 
-          {/* Goals */}
           <div className="profile-goals glass-card">
             <h2>Goals & Milestones</h2>
             <div className="goals-list">
@@ -309,7 +299,6 @@ function ProfilePage() {
                 </div>
               ))}
             </div>
-
             <button
               className="btn add-goal-btn"
               onClick={() => setIsAddGoalModalOpen(true)}>
@@ -317,7 +306,6 @@ function ProfilePage() {
             </button>
           </div>
 
-          {/* sign‑out */}
           <div className="sign-out-card">
             <button className="sign-out-btn" onClick={handleSignOut}>
               Sign Out
@@ -326,17 +314,16 @@ function ProfilePage() {
         </div>
       </div>
 
-      {/* =============================================================
-         Modals
-      ============================================================= */}
-
-      {/* Edit profile */}
+      {/* EDIT PROFILE MODAL */}
       {isEditProfileModalOpen && (
         <div className="modal-overlay">
           <div className="modal-content">
             <h3>Edit Profile</h3>
-
-            <form onSubmit={handleEditProfileSubmit} className="modal-form">
+            <form
+              onSubmit={handleEditProfileSubmit}
+              className="modal-form"
+              noValidate
+            >
               <label>Name:</label>
               <input
                 name="name"
@@ -405,13 +392,16 @@ function ProfilePage() {
         </div>
       )}
 
-      {/* Add goal */}
+      {/* ADD GOAL MODAL */}
       {isAddGoalModalOpen && (
         <div className="modal-overlay">
           <div className="modal-content">
             <h3>Add Goal</h3>
-
-            <form onSubmit={handleAddGoalSubmit} className="modal-form">
+            <form
+              onSubmit={handleAddGoalSubmit}
+              className="modal-form"
+              noValidate
+            >
               <label>Goal Title:</label>
               <input
                 value={newGoal.title}
@@ -446,12 +436,11 @@ function ProfilePage() {
         </div>
       )}
 
-      {/* Edit goal */}
+      {/* EDIT GOAL MODAL */}
       {isEditGoalModalOpen && (
         <div className="modal-overlay">
           <div className="modal-content">
             <h3>Edit Goal</h3>
-
             <form onSubmit={handleEditGoalSubmit} className="modal-form">
               <label>Goal Title:</label>
               <input
