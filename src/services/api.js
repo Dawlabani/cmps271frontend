@@ -37,6 +37,8 @@ export const updateBudgets = payload => api.put('/budget', payload);
 
 // Rewards endpoints
 export const getRewards = () => api.get('/rewards');
+export const redeemReward = rewardId =>
+  api.post('/rewards/redeem', { rewardId });
 export const getTotalRewards = () => api.get('/rewards/total');
 export const addReward = data => api.post('/rewards', data);
 
