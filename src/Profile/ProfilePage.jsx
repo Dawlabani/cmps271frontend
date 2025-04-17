@@ -241,7 +241,7 @@ function ProfilePage() {
           <div className="profile-goals glass-card">
             <h2>Goals & Milestones</h2>
             <div className="goals-list">
-              {profile.goals.map((goal, idx) => (
+              {(Array.isArray(profile.goals) ? profile.goals : []).map((goal, idx) => (
                 <div className="goal-item" key={idx}>
                   <div className="goal-text">
                     <h4>{goal.title}</h4>
