@@ -1,13 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import './ProfilePage.css';
-import { getProfile, updateProfile, getExpenses, getTotalRewards } from '../services/api';
+import {
+  getProfile,
+  updateProfile,
+  getExpenses,
+  getTotalRewards,
+} from '../services/api';
 
 function ProfilePage() {
+  /* ------------------------------------------------------------------
+     Auth / defaults
+  ------------------------------------------------------------------ */
   const isLoggedIn = Boolean(localStorage.getItem('token'));
   const defaultAvatar =
     'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png';
 
-  // Profile state; initial values loaded from backend
+  /* ------------------------------------------------------------------
+     React state
+  ------------------------------------------------------------------ */
   const [profile, setProfile] = useState({
     name: '',
     email: '',
@@ -20,28 +30,32 @@ function ProfilePage() {
   });
   const [loading, setLoading] = useState(true);
 
-  // New stats: number of expenses logged & rewards redeemed
   const [expenseCount, setExpenseCount] = useState(0);
   const [redeemedRewardCount, setRedeemedRewardCount] = useState(0);
 
-  // Modal states
+  /* modals */
   const [isEditProfileModalOpen, setIsEditProfileModalOpen] = useState(false);
   const [isAddGoalModalOpen, setIsAddGoalModalOpen] = useState(false);
   const [isEditGoalModalOpen, setIsEditGoalModalOpen] = useState(false);
 
-  // New goal form state
+  /* goal forms */
   const [newGoal, setNewGoal] = useState({ title: '', progress: '' });
-
-  // State for editing an existing goal
   const [editingGoalIndex, setEditingGoalIndex] = useState(null);
-  const [editGoalData, setEditGoalData] = useState({ title: '', progress: '', achieved: false });
+  const [editGoalData, setEditGoalData] = useState({
+    title: '',
+    progress: '',
+    achieved: false,
+  });
 
-  // Helper to ensure goals is always an array
+  /* ------------------------------------------------------------------
+     Helpers
+  ------------------------------------------------------------------ */
   const normalizeGoals = (goalsData) => {
     if (Array.isArray(goalsData)) return goalsData;
     if (typeof goalsData === 'string') {
       try {
-        return JSON.parse(goalsData) || [];
+        const parsed = JSON.parse(goalsData);
+        return Array.isArray(parsed) ? parsed : [];
       } catch {
         return [];
       }
@@ -49,199 +63,217 @@ function ProfilePage() {
     return [];
   };
 
-  // Fetch profile from backend on mount
+  /* ------------------------------------------------------------------
+     Effects – fetch profile & stats
+  ------------------------------------------------------------------ */
   useEffect(() => {
-    const fetchProfile = async () => {
+    if (!isLoggedIn) return;
+
+    (async () => {
       try {
-        const response = await getProfile();
-        const data = response.data;
-        // Normalize goals to array
+        const { data } = await getProfile();
         data.goals = normalizeGoals(data.goals);
         setProfile(data);
-      } catch (error) {
-        console.error("Failed to fetch profile:", error);
+      } catch (err) {
+        console.error('Failed to fetch profile:', err);
       } finally {
         setLoading(false);
       }
-    };
-    if (isLoggedIn) {
-      fetchProfile();
-    }
+    })();
   }, [isLoggedIn]);
 
-  // Fetch expense count and redeemed rewards count on mount
   useEffect(() => {
-    const fetchStats = async () => {
+    if (!isLoggedIn) return;
+
+    (async () => {
       try {
         const expensesRes = await getExpenses();
         setExpenseCount(expensesRes.data.length);
-      } catch (error) {
-        console.error("Failed to fetch expenses:", error);
+      } catch (err) {
+        console.error('Failed to fetch expenses:', err);
       }
       try {
         const rewardsRes = await getTotalRewards();
         setRedeemedRewardCount(rewardsRes.data.total);
-      } catch (error) {
-        console.error("Failed to fetch redeemed rewards:", error);
+      } catch (err) {
+        console.error('Failed to fetch redeemed rewards:', err);
       }
-    };
-    if (isLoggedIn) {
-      fetchStats();
-    }
+    })();
   }, [isLoggedIn]);
 
-  // Profile Editing Handlers
-  const handleProfileInputChange = (e) => {
+  /* ------------------------------------------------------------------
+     Profile Handlers
+  ------------------------------------------------------------------ */
+  const handleProfileChange = (e) =>
     setProfile({ ...profile, [e.target.name]: e.target.value });
-  };
 
   const handleAvatarChange = (e) => {
     const file = e.target.files[0];
-    if (file) {
-      setProfile({ ...profile, avatar: URL.createObjectURL(file) });
-    }
+    if (file) setProfile({ ...profile, avatar: URL.createObjectURL(file) });
   };
-
-  const handleRemoveAvatar = () => {
+  const handleRemoveAvatar = () =>
     setProfile({ ...profile, avatar: defaultAvatar });
-  };
 
-  // Update profile (including bio and goals) on backend
   const handleEditProfileSubmit = async (e) => {
     e.preventDefault();
     try {
-      // Ensure goals array before sending
       const payload = { ...profile, goals: normalizeGoals(profile.goals) };
-      const response = await updateProfile(payload);
-      const updated = response.data;
-      updated.goals = normalizeGoals(updated.goals);
-      console.log('Profile updated:', updated);
-      setProfile(updated);
+      const { data } = await updateProfile(payload);
+      data.goals = normalizeGoals(data.goals);
+      setProfile(data);
       setIsEditProfileModalOpen(false);
-    } catch (error) {
-      console.error('Failed to update profile:', error);
+    } catch (err) {
+      console.error('Failed to update profile:', err);
     }
   };
 
-  // Add Goal Handlers
+  /* ------------------------------------------------------------------
+     Goal Handlers
+  ------------------------------------------------------------------ */
   const handleAddGoalSubmit = async (e) => {
     e.preventDefault();
-    if (newGoal.title && newGoal.progress) {
-      const updatedGoals = [...normalizeGoals(profile.goals), { ...newGoal, achieved: false }];
-      const payload = { ...profile, goals: updatedGoals };
-      try {
-        const response = await updateProfile(payload);
-        const updated = response.data;
-        updated.goals = normalizeGoals(updated.goals);
-        console.log('Goal added:', updated);
-        setProfile(updated);
-        setNewGoal({ title: '', progress: '' });
-        setIsAddGoalModalOpen(false);
-      } catch (error) {
-        console.error("Failed to update profile with new goal:", error);
-      }
+    if (!newGoal.title || !newGoal.progress) return;
+    try {
+      const goals = [
+        ...normalizeGoals(profile.goals),
+        { ...newGoal, achieved: false },
+      ];
+      const { data } = await updateProfile({ ...profile, goals });
+      data.goals = normalizeGoals(data.goals);
+      setProfile(data);
+      setNewGoal({ title: '', progress: '' });
+      setIsAddGoalModalOpen(false);
+    } catch (err) {
+      console.error('Failed to add goal:', err);
     }
   };
 
-  // Edit Goal Handlers
-  const openEditGoalModal = (index) => {
-    const goalsArr = normalizeGoals(profile.goals);
-    setEditingGoalIndex(index);
-    setEditGoalData({ ...goalsArr[index] });
+  const openEditGoalModal = (idx) => {
+    setEditingGoalIndex(idx);
+    setEditGoalData({ ...normalizeGoals(profile.goals)[idx] });
     setIsEditGoalModalOpen(true);
+  };
+
+  const handleEditGoalChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setEditGoalData({
+      ...editGoalData,
+      [name]: type === 'checkbox' ? checked : value,
+    });
   };
 
   const handleEditGoalSubmit = async (e) => {
     e.preventDefault();
-    const goalsArr = normalizeGoals(profile.goals);
-    goalsArr[editingGoalIndex] = editGoalData;
-    const payload = { ...profile, goals: goalsArr };
     try {
-      const response = await updateProfile(payload);
-      const updated = response.data;
-      updated.goals = normalizeGoals(updated.goals);
-      console.log('Goal updated:', updated);
-      setProfile(updated);
+      const goals = normalizeGoals(profile.goals);
+      goals[editingGoalIndex] = editGoalData;
+      const { data } = await updateProfile({ ...profile, goals });
+      data.goals = normalizeGoals(data.goals);
+      setProfile(data);
       setIsEditGoalModalOpen(false);
-    } catch (error) {
-      console.error("Failed to update profile after editing goal:", error);
+    } catch (err) {
+      console.error('Failed to update goal:', err);
     }
   };
 
   const handleRemoveGoalInEdit = async () => {
-    if (window.confirm('Are you sure you want to remove this goal?')) {
-      const goalsArr = normalizeGoals(profile.goals);
-      goalsArr.splice(editingGoalIndex, 1);
-      const payload = { ...profile, goals: goalsArr };
-      try {
-        const response = await updateProfile(payload);
-        const updated = response.data;
-        updated.goals = normalizeGoals(updated.goals);
-        console.log('Goal removed:', updated);
-        setProfile(updated);
-        setIsEditGoalModalOpen(false);
-      } catch (error) {
-        console.error("Failed to remove goal:", error);
-      }
+    if (!window.confirm('Remove this goal?')) return;
+    try {
+      const goals = normalizeGoals(profile.goals);
+      goals.splice(editingGoalIndex, 1);
+      const { data } = await updateProfile({ ...profile, goals });
+      data.goals = normalizeGoals(data.goals);
+      setProfile(data);
+      setIsEditGoalModalOpen(false);
+    } catch (err) {
+      console.error('Failed to remove goal:', err);
     }
   };
 
-  // Sign Out Handler
+  /* ------------------------------------------------------------------
+     Sign‑out
+  ------------------------------------------------------------------ */
   const handleSignOut = () => {
     localStorage.removeItem('token');
     window.location = '/login';
   };
 
+  /* ------------------------------------------------------------------
+     Guards
+  ------------------------------------------------------------------ */
   if (!isLoggedIn) {
     return (
       <div className="profile-page">
         <div className="profile-placeholder">
           <h2>Please Sign In</h2>
           <p>You need to sign in to view your profile.</p>
-          <button className="btn signin-btn" onClick={() => (window.location = '/login')}>
+          <button
+            className="btn signin-btn"
+            onClick={() => (window.location = '/login')}>
             Sign In
           </button>
         </div>
       </div>
     );
   }
+  if (loading) return <div className="profile-page">Loading…</div>;
 
-  if (loading) {
-    return <div className="profile-page"><p>Loading profile...</p></div>;
-  }
+  const goalsArr = normalizeGoals(profile.goals);
 
+  /* ------------------------------------------------------------------
+     JSX
+  ------------------------------------------------------------------ */
   return (
     <div className="profile-page">
       <h1 className="main-heading">My Finance Dashboard</h1>
-      <p className="main-subheading">Welcome to your personal finance portal</p>
+      <p className="main-subheading">
+        Welcome to your personal finance portal
+      </p>
+
       <div className="profile-dashboard">
+        {/* ------------ LEFT COLUMN ------------- */}
         <div className="dashboard-left">
+          {/* profile card */}
           <div className="profile-info-card glass-card">
             <div className="profile-info-header">
-              <img src={profile.avatar} alt="Profile" className="profile-avatar" />
+              <img
+                src={profile.avatar}
+                alt="Profile avatar"
+                className="profile-avatar"
+              />
               <div>
                 <h2 className="profile-name">{profile.name}</h2>
                 <p className="profile-location">{profile.location}</p>
               </div>
             </div>
+
             <div className="profile-contact">
-              <h3 className="contact-heading">Email</h3>
-              <p className="profile-email">{profile.email}</p>
-              <h3 className="contact-heading">Bio</h3>
-              <p className="profile-bio">{profile.bio}</p>
+              <h3>Email</h3>
+              <p>{profile.email}</p>
+              <h3>Bio</h3>
+              <p>{profile.bio}</p>
             </div>
-            <button className="btn edit-profile-btn" onClick={() => setIsEditProfileModalOpen(true)}>
+
+            <button
+              className="btn edit-profile-btn"
+              onClick={() => setIsEditProfileModalOpen(true)}>
               Edit Profile
             </button>
           </div>
+
+          {/* eco points */}
           <div className="profile-eco glass-card">
-            <p>
-              Eco-conscious since {profile.createdAt ? new Date(profile.createdAt).toLocaleDateString() : 'N/A'}!
-              &nbsp;You currently have {profile.points} points.
-            </p>
+            Eco‑conscious since{' '}
+            {profile.createdAt
+              ? new Date(profile.createdAt).toLocaleDateString()
+              : 'N/A'}
+            . You currently have {profile.points} points.
           </div>
         </div>
+
+        {/* ------------ RIGHT COLUMN ------------- */}
         <div className="dashboard-right">
+          {/* Stats */}
           <div className="profile-stats glass-card">
             <h2>My Stats</h2>
             <div className="stats-grid">
@@ -255,10 +287,12 @@ function ProfilePage() {
               </div>
             </div>
           </div>
+
+          {/* Goals */}
           <div className="profile-goals glass-card">
             <h2>Goals & Milestones</h2>
             <div className="goals-list">
-              {(Array.isArray(profile.goals) ? profile.goals : []).map((goal, idx) => (
+              {goalsArr.map((goal, idx) => (
                 <div className="goal-item" key={idx}>
                   <div className="goal-text">
                     <h4>{goal.title}</h4>
@@ -266,49 +300,103 @@ function ProfilePage() {
                     {goal.achieved && <p className="goal-achieved">Achieved</p>}
                   </div>
                   <div className="goal-buttons">
-                    <button className="btn goal-edit-btn" onClick={() => openEditGoalModal(idx)}>
+                    <button
+                      className="btn goal-edit-btn"
+                      onClick={() => openEditGoalModal(idx)}>
                       Edit
                     </button>
                   </div>
                 </div>
               ))}
             </div>
-            <button className="btn add-goal-btn" onClick={() => setIsAddGoalModalOpen(true)}>
+
+            <button
+              className="btn add-goal-btn"
+              onClick={() => setIsAddGoalModalOpen(true)}>
               Add Goal
             </button>
           </div>
+
+          {/* sign‑out */}
           <div className="sign-out-card">
-            <button className="sign-out-btn" onClick={handleSignOut} aria-label="Sign out of your account">
+            <button className="sign-out-btn" onClick={handleSignOut}>
               Sign Out
             </button>
           </div>
         </div>
       </div>
+
+      {/* =============================================================
+         Modals
+      ============================================================= */}
+
+      {/* Edit profile */}
       {isEditProfileModalOpen && (
         <div className="modal-overlay">
           <div className="modal-content">
             <h3>Edit Profile</h3>
+
             <form onSubmit={handleEditProfileSubmit} className="modal-form">
               <label>Name:</label>
-              <input type="text" name="name" value={profile.name} onChange={handleProfileInputChange} required />
+              <input
+                name="name"
+                value={profile.name}
+                onChange={handleProfileChange}
+                required
+              />
+
               <label>Email:</label>
-              <input type="email" name="email" value={profile.email} onChange={handleProfileInputChange} required />
+              <input
+                type="email"
+                name="email"
+                value={profile.email}
+                onChange={handleProfileChange}
+                required
+              />
+
               <label>Location:</label>
-              <input type="text" name="location" value={profile.location} onChange={handleProfileInputChange} required />
+              <input
+                name="location"
+                value={profile.location}
+                onChange={handleProfileChange}
+                required
+              />
+
               <label>Bio:</label>
-              <textarea name="bio" value={profile.bio} onChange={handleProfileInputChange} required></textarea>
-              <label htmlFor="avatar-upload" style={{ cursor: 'pointer', color: 'var(--secondary)' }}>
+              <textarea
+                name="bio"
+                value={profile.bio}
+                onChange={handleProfileChange}
+              />
+
+              <label
+                htmlFor="avatar-upload"
+                style={{ cursor: 'pointer', color: 'var(--secondary)' }}>
                 Change Profile Picture
               </label>
-              <input id="avatar-upload" type="file" accept="image/*" onChange={handleAvatarChange} style={{ display: 'none' }} />
-              <button type="button" className="btn modal-submit-btn" onClick={handleRemoveAvatar}>
-                Remove Profile Picture
+              <input
+                id="avatar-upload"
+                type="file"
+                accept="image/*"
+                onChange={handleAvatarChange}
+                hidden
+              />
+
+              <button
+                type="button"
+                className="btn modal-submit-btn"
+                onClick={handleRemoveAvatar}>
+                Remove Picture
               </button>
+
               <div className="modal-buttons">
                 <button type="submit" className="btn modal-submit-btn">
                   Save Changes
                 </button>
-                <button type="button" className="btn modal-cancel-btn" onClick={() => setIsEditProfileModalOpen(false)}>
+                <button
+                  type="button"
+                  className="btn modal-cancel-btn"
+                  onClick={() => setIsEditProfileModalOpen(false)}>
                   Cancel
                 </button>
               </div>
@@ -316,20 +404,40 @@ function ProfilePage() {
           </div>
         </div>
       )}
+
+      {/* Add goal */}
       {isAddGoalModalOpen && (
         <div className="modal-overlay">
           <div className="modal-content">
             <h3>Add Goal</h3>
+
             <form onSubmit={handleAddGoalSubmit} className="modal-form">
               <label>Goal Title:</label>
-              <input type="text" placeholder="Goal Title" value={newGoal.title} onChange={(e) => setNewGoal({ ...newGoal, title: e.target.value })} required />
+              <input
+                value={newGoal.title}
+                onChange={(e) =>
+                  setNewGoal({ ...newGoal, title: e.target.value })
+                }
+                required
+              />
+
               <label>Progress:</label>
-              <input type="text" placeholder="Progress" value={newGoal.progress} onChange={(e) => setNewGoal({ ...newGoal, progress: e.target.value })} required />
+              <input
+                value={newGoal.progress}
+                onChange={(e) =>
+                  setNewGoal({ ...newGoal, progress: e.target.value })
+                }
+                required
+              />
+
               <div className="modal-buttons">
                 <button type="submit" className="btn modal-submit-btn">
                   Add Goal
                 </button>
-                <button type="button" className="btn modal-cancel-btn" onClick={() => setIsAddGoalModalOpen(false)}>
+                <button
+                  type="button"
+                  className="btn modal-cancel-btn"
+                  onClick={() => setIsAddGoalModalOpen(false)}>
                   Cancel
                 </button>
               </div>
@@ -337,27 +445,54 @@ function ProfilePage() {
           </div>
         </div>
       )}
+
+      {/* Edit goal */}
       {isEditGoalModalOpen && (
         <div className="modal-overlay">
           <div className="modal-content">
             <h3>Edit Goal</h3>
+
             <form onSubmit={handleEditGoalSubmit} className="modal-form">
               <label>Goal Title:</label>
-              <input type="text" name="title" value={editGoalData.title} onChange={handleEditGoalInputChange} required />
+              <input
+                name="title"
+                value={editGoalData.title}
+                onChange={handleEditGoalChange}
+                required
+              />
+
               <label>Progress:</label>
-              <input type="text" name="progress" value={editGoalData.progress} onChange={handleEditGoalInputChange} required />
+              <input
+                name="progress"
+                value={editGoalData.progress}
+                onChange={handleEditGoalChange}
+                required
+              />
+
               <label>
-                <input type="checkbox" name="achieved" checked={editGoalData.achieved} onChange={handleEditGoalInputChange} />{' '}
-                Mark as Achieved
+                <input
+                  type="checkbox"
+                  name="achieved"
+                  checked={editGoalData.achieved}
+                  onChange={handleEditGoalChange}
+                />{' '}
+                Achieved
               </label>
+
               <div className="modal-buttons">
                 <button type="submit" className="btn modal-submit-btn">
-                  Save Changes
+                  Save
                 </button>
-                <button type="button" className="btn modal-cancel-btn" onClick={() => setIsEditGoalModalOpen(false)}>
+                <button
+                  type="button"
+                  className="btn modal-cancel-btn"
+                  onClick={() => setIsEditGoalModalOpen(false)}>
                   Cancel
                 </button>
-                <button type="button" className="btn modal-cancel-btn" onClick={handleRemoveGoalInEdit}>
+                <button
+                  type="button"
+                  className="btn modal-cancel-btn"
+                  onClick={handleRemoveGoalInEdit}>
                   Remove Goal
                 </button>
               </div>
