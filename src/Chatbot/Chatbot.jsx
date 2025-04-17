@@ -1,5 +1,4 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { motion } from 'framer-motion';
 import api from '../services/api';
 import './Chatbot.css';
 
@@ -15,17 +14,19 @@ function ChatBot() {
   const [isTyping, setIsTyping] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
   const [selectedFile, setSelectedFile] = useState(null);
-  const chatEndRef = useRef(null);
+  const chatHistoryRef = useRef(null);
 
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (chatHistoryRef.current) {
+      chatHistoryRef.current.scrollTop = chatHistoryRef.current.scrollHeight;
+    }
   }, [chatHistory]);
 
   const handleSendMessage = async () => {
     if (!userMessage.trim() && !selectedImage && !selectedFile) return;
 
-    const newHistory = [...chatHistory];
     const now = new Date().toLocaleTimeString();
+    let newHistory = [...chatHistory];
 
     if (selectedImage) {
       newHistory.push({ sender: 'user', image: URL.createObjectURL(selectedImage), timestamp: now });
@@ -52,15 +53,14 @@ function ChatBot() {
       const response = await api.post('/api/chatbot', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
-
       const reply = response.data.reply;
+
       setChatHistory(prev => [
         ...newHistory,
         { sender: 'bot', text: reply, timestamp: new Date().toLocaleTimeString() }
       ]);
-
-    } catch (err) {
-      console.error('Chatbot error:', err);
+    } catch (error) {
+      console.error('Chatbot error:', error);
       setChatHistory(prev => [
         ...newHistory,
         { sender: 'bot', text: 'Sorry, something went wrong.', timestamp: new Date().toLocaleTimeString() }
@@ -93,48 +93,45 @@ function ChatBot() {
   };
 
   return (
-    <div className="chatbot-wrapper">
-      <motion.div
-        className="chatbot-container"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-      >
-        <h2 className="chatbot-header">SDG Finance ChatBot</h2>
-        <div className="chatbot-history">
-          {chatHistory.map((msg, idx) => (
-            <div key={idx} className={`message ${msg.sender}`}> 
-              {msg.text && <p>{msg.text}</p>}
-              {msg.image && <img src={msg.image} alt="upload" className="upload-preview" />}
-              {msg.file && <p className="file-name">📄 {msg.file}</p>}
-              <span className="timestamp">{msg.timestamp}</span>
-            </div>
-          ))}
-          {isTyping && <div className="message bot"><p>Typing...</p></div>}
-          <div ref={chatEndRef} />
-        </div>
+    <div className="wrapper">
+      <div className="chatbot-page">
+        <h1 className="chatbot-title">SDG Finance ChatBot</h1>
+        <div className="chatbot-section">
+          <div className="chat-history" ref={chatHistoryRef}>
+            {chatHistory.map((msg, idx) => (
+              <div key={idx} className={`chat-message ${msg.sender}`}>
+                {msg.text && <p>{msg.text}</p>}
+                {msg.image && <img src={msg.image} alt="upload" />}
+                {msg.file && <p className="file-name">📄 {msg.file}</p>}
+                <span className={`timestamp ${msg.sender}`}>{msg.timestamp}</span>
+              </div>
+            ))}
+            {isTyping && <div className="chat-message bot"><p>Typing...</p></div>}
+          </div>
 
-        <div className="chatbot-inputs">
-          <label className="upload-btn">
-            📄
-            <input type="file" onChange={handleFileUpload} hidden />
-          </label>
-          <label className="upload-btn">
-            📷
-            <input type="file" accept="image/*" onChange={handleImageUpload} hidden />
-          </label>
-          <input
-            type="text"
-            value={userMessage}
-            onChange={e => setUserMessage(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && handleSendMessage()}
-            placeholder="Type your question..."
-            className="chat-input"
-          />
-          <button onClick={handleSendMessage} className="send-btn">Send</button>
-          <button onClick={handleReset} className="reset-btn">Reset</button>
+          <div className="chat-input-container">
+            <label className="upload-button">
+              📄
+              <input type="file" onChange={handleFileUpload} hidden />
+            </label>
+            <label className="upload-button">
+              📷
+              <input type="file" accept="image/*" onChange={handleImageUpload} hidden />
+            </label>
+            <input
+              type="text"
+              className="chat-input"
+              placeholder="Type your question..."
+              value={userMessage}
+              onChange={e => setUserMessage(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && handleSendMessage()}
+            />
+            <button className="send-button" onClick={handleSendMessage}>Send</button>
+          </div>
+
+          <button className="reset-button" onClick={handleReset}>Reset Chat</button>
         </div>
-      </motion.div>
+      </div>
     </div>
   );
 }
