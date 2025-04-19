@@ -1,0 +1,26 @@
+.budget-summary {
+    display: flex;
+    gap: 1rem;
+    margin: 2rem 0;
+    justify-content: center;
+  }
+  
+  .budget-summary .card {
+    flex: 1;
+    background: var(--glass-bg, rgba(255,255,255,0.6));
+    padding: 1.5rem;
+    border-radius: var(--border-radius, 16px);
+    text-align: center;
+    box-shadow: var(--shadow, 0 4px 12px rgba(0,0,0,0.15));
+    transition: transform var(--transition, 0.3s);
+  }
+  
+  .budget-summary .card h3 {
+    margin-bottom: .5rem;
+    color: var(--secondary, #00b894);
+  }
+  
+  .budget-summary .card.overspent {
+    border: 2px solid var(--danger, #d63031);
+  }
+  
