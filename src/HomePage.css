@@ -3,7 +3,7 @@
   --secondary: #00b894;
   --accent: #0984e3;
   --light: #ffffff;
-  --background: #309d86;
+  --background: #ecfff4;
   --shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   --transition: 0.3s ease;
   --border-radius: 16px;
@@ -16,7 +16,7 @@ body {
   margin: 0;
   padding: 0;
   font-family: 'Poppins', sans-serif;
-  background: linear-gradient(135deg, #309d86, #00b894);
+  background: #ecfff4;
   color: var(--primary);
   scroll-behavior: smooth;
 }
@@ -71,7 +71,7 @@ p {
   color: #fff;
   border-radius: var(--border-radius);
   overflow: hidden;
-  background: linear-gradient(135deg, var(--secondary), var(--accent));
+  background: #ecfff4;
 }
 
 @keyframes pulse {
@@ -81,7 +81,7 @@ p {
 
 /* Unified modern button style */
 .custom-button {
-  background: linear-gradient(135deg, var(--accent), var(--secondary));
+  background: #ecfff4;
   color: #ffffff;
   padding: 0.8rem 2rem;
   border: none;
