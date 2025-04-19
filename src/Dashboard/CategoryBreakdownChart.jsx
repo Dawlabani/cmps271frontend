@@ -10,7 +10,6 @@ import {
   Legend
 } from 'recharts';
 import { getExpenses } from '../services/api';
-import './CategoryBreakdownChart.css';
 
 const COLORS = [
   '#00b894', '#2d3436', '#e74c3c',

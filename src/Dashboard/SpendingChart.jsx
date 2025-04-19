@@ -11,7 +11,6 @@ import {
   ResponsiveContainer
 } from 'recharts';
 import { getExpenses } from '../services/api';
-import './SpendingChart.css';
 
 export default function SpendingChart() {
   const [expenses, setExpenses] = useState([]);
