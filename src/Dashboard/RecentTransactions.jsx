@@ -1,55 +1,72 @@
 // src/components/RecentTransactions.jsx
-import React, { useContext } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { getExpenses } from '../services/api';
 import './RecentTransactions.css';
-import { ExpensesContext } from '../contexts/ExpensesContext';
 
-function RecentTransactions() {
-  const { expenses } = useContext(ExpensesContext);
+export default function RecentTransactions() {
+  const [expenses, setExpenses] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getExpenses()
+      .then(({ data }) => setExpenses(data))
+      .catch(err => console.error('Error fetching expenses:', err))
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) {
+    return (
+      <motion.section
+        className="recent-transactions"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <p>Loading data…</p>
+      </motion.section>
+    );
+  }
+
+  const recent = [...expenses]
+    .sort((a, b) => new Date(b.date) - new Date(a.date))
+    .slice(0, 5);
 
   return (
     <motion.section
       className="recent-transactions"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, ease: 'easeOut' }}
+      transition={{ duration: 0.5 }}
     >
-      <motion.table className="transactions-table">
+      <table className="transactions-table">
         <thead>
-          <tr className="transactions-row header-row">
-            <th className="transaction-cell">Date</th>
-            <th className="transaction-cell">Transaction</th>
-            <th className="transaction-cell">Amount ($)</th>
-            <th className="transaction-cell">Category</th>
+          <tr>
+            <th>Date</th>
+            <th>Transaction</th>
+            <th>Amount ($)</th>
+            <th>Category</th>
           </tr>
         </thead>
-        <motion.tbody>
-          {expenses.map((transaction) => (
-            <motion.tr
-              key={transaction.id}
-              className="transactions-row"
-              whileHover={{ scale: 1.02 }}
-              transition={{ duration: 0.2 }}
-            >
-              <td className="transaction-cell">{transaction.date}</td>
-              <td className="transaction-cell">{transaction.name}</td>
-              <td className="transaction-cell">{transaction.cost}</td>
-              <td className="transaction-cell">
-                {transaction.category ? transaction.category.name : 'Undefined'}
-              </td>
-            </motion.tr>
-          ))}
-          {expenses.length === 0 && (
-            <tr className="transactions-row">
-              <td colSpan="4" className="transaction-cell">
-                <div className="no-transaction">No recent transaction</div>
+        <tbody>
+          {recent.length > 0 ? (
+            recent.map(tx => (
+              <tr key={tx.id}>
+                <td>{tx.date}</td>
+                <td>{tx.name}</td>
+                <td>{tx.cost}</td>
+                <td>{tx.category?.name || 'Undefined'}</td>
+              </tr>
+            ))
+          ) : (
+            <tr>
+              <td colSpan="4" className="no-transaction">
+                No recent transactions
               </td>
             </tr>
           )}
-        </motion.tbody>
-      </motion.table>
+        </tbody>
+      </table>
     </motion.section>
   );
 }
-
-export default RecentTransactions;

@@ -1,46 +1,67 @@
 // src/components/ExpensesManager.jsx
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import './ExpensesManager.css';
 import AddExpense from './AddExpense';
 import EditExpense from './EditExpense';
 import RemoveExpense from './RemoveExpense';
-import { getExpenses, addExpense, updateExpense, deleteExpense } from '../services/api';
-import { ExpensesContext } from '../contexts/ExpensesContext';
+import {
+  getExpenses,
+  addExpense as apiAddExpense,
+  updateExpense as apiUpdateExpense,
+  deleteExpense as apiDeleteExpense
+} from '../services/api';
+import './ExpensesManager.css';
 
-function ExpensesManager({ onExpensesChange }) {
-  const { expenses, setExpenses } = useContext(ExpensesContext);
+export default function ExpensesManager({ onExpensesChange }) {
+  // Local state instead of context
+  const [expenses, setExpenses] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // Filtering and sorting states
+  // Filtering & sorting state
   const [categoryFilter, setCategoryFilter] = useState('All');
   const [sortFilter, setSortFilter] = useState('Date');
   const [sortOrder, setSortOrder] = useState('Descending');
   const [currentPage, setCurrentPage] = useState(1);
   const [searchedExpense, setSearched] = useState('');
 
-  // Modal states
-  const [expenseToEdit, setExpenseToEdit] = useState(null);
-  const [isEditing, setIsEditing] = useState(false);
+  // Modal state
   const [isAdding, setIsAdding] = useState(false);
-  const [expenseToRemove, setExpenseToRemove] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
   const [isRemoving, setIsRemoving] = useState(false);
+  const [expenseToEdit, setExpenseToEdit] = useState(null);
+  const [expenseToRemove, setExpenseToRemove] = useState(null);
 
   const itemsPerPage = 10;
 
+  // Fetch expenses on mount
   useEffect(() => {
-    const fetchExpenses = async () => {
-      try {
-        const response = await getExpenses();
-        setExpenses(response.data);
-      } catch (err) {
-        console.error('Error fetching expenses:', err);
-      }
-    };
-    fetchExpenses();
-  }, [setExpenses]);
+    setLoading(true);
+    getExpenses()
+      .then(({ data }) => {
+        setExpenses(data);
+        onExpensesChange?.(data);
+      })
+      .catch(err => console.error('Error fetching expenses:', err))
+      .finally(() => setLoading(false));
+  }, []);
 
-  const sortExpenses = (expensesArray, criteria, order) => {
-    const sorted = [...expensesArray];
+  // Show loading placeholder
+  if (loading) {
+    return (
+      <motion.section
+        className="expenses-manager"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: 'easeOut' }}
+      >
+        <p>Loading data…</p>
+      </motion.section>
+    );
+  }
+
+  // Sorting helper
+  const sortExpenses = (arr, criteria, order) => {
+    const sorted = [...arr];
     switch (criteria) {
       case 'Date':
         sorted.sort((a, b) => new Date(a.date) - new Date(b.date));
@@ -59,122 +80,87 @@ function ExpensesManager({ onExpensesChange }) {
       default:
         break;
     }
-    if (order === 'Descending') {
-      sorted.reverse();
-    }
+    if (order === 'Descending') sorted.reverse();
     return sorted;
   };
 
-  // Add Expense Handlers
-  const handleAddExpense = () => {
-    setIsAdding(true);
-  };
+  // Filter, search, paginate
+  const searched = !searchedExpense
+    ? expenses
+    : expenses.filter(e =>
+        e.name.toLowerCase().includes(searchedExpense.toLowerCase())
+      );
 
-  const handleAddSave = (newExpense) => {
-    const updatedExpenses = [...expenses, newExpense];
-    setExpenses(updatedExpenses);
-    if (onExpensesChange) onExpensesChange(updatedExpenses);
-    setIsAdding(false);
-  };
+  const filtered = categoryFilter === 'All'
+    ? searched
+    : searched.filter(e => (e.category?.name || 'Undefined') === categoryFilter);
 
-  const handleAddCancel = () => {
-    setIsAdding(false);
-  };
+  const sortedList = sortExpenses(filtered, sortFilter, sortOrder);
+  const totalPages = sortedList.length
+    ? Math.ceil(sortedList.length / itemsPerPage)
+    : 0;
+  const currentExpenses = sortedList.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
-  // Remove Expense Handlers
-  const handleRemoveExpense = (id) => {
-    const expense = expenses.find(exp => exp.id === id);
-    setExpenseToRemove(expense);
-    setIsRemoving(true);
-  };
-
-  const handleRemoveSave = async (id) => {
+  // Handlers: Add
+  const handleAddExpense = () => setIsAdding(true);
+  const handleAddSave = async (newExpense) => {
     try {
-      await deleteExpense(id);
-      const updated = expenses.filter(exp => exp.id !== id);
-      setExpenses(updated);
-      if (onExpensesChange) onExpensesChange(updated);
-      setIsRemoving(false);
+      const { data } = await apiAddExpense(newExpense);
+      const next = [...expenses, data];
+      setExpenses(next);
+      onExpensesChange?.(next);
     } catch (err) {
-      console.error('Error removing expense:', err);
+      console.error('Error adding expense:', err);
     }
+    setIsAdding(false);
   };
 
-  const handleRemoveCancel = () => {
-    setIsRemoving(false);
-  };
-
-  // Edit Expense Handlers
+  // Handlers: Edit
   const handleEditExpense = (id) => {
-    const expense = expenses.find(exp => exp.id === id);
-    setExpenseToEdit(expense);
+    const exp = expenses.find(e => e.id === id);
+    setExpenseToEdit(exp);
     setIsEditing(true);
   };
-
-  const handleEditSave = async (updatedExpense) => {
+  const handleEditSave = async (updated) => {
     try {
-      const response = await updateExpense(updatedExpense.id, updatedExpense);
-      const updatedRecord = response.data;
-      const updatedExpenses = expenses.map(exp =>
-        exp.id === updatedExpense.id ? updatedRecord : exp
-      );
-      setExpenses(updatedExpenses);
-      if (onExpensesChange) onExpensesChange(updatedExpenses);
-      setIsEditing(false);
-      setExpenseToEdit(null);
+      const { data } = await apiUpdateExpense(updated.id, updated);
+      const next = expenses.map(e => e.id === data.id ? data : e);
+      setExpenses(next);
+      onExpensesChange?.(next);
     } catch (err) {
       console.error('Error updating expense:', err);
     }
-  };
-
-  const handleEditCancel = () => {
     setIsEditing(false);
-    setExpenseToEdit(null);
   };
 
-  // Sorting & Filtering Handlers
-  const handleSortChange = (e) => {
-    setSortFilter(e.target.value);
-    setCurrentPage(1);
+  // Handlers: Remove
+  const handleRemoveExpense = (id) => {
+    const exp = expenses.find(e => e.id === id);
+    setExpenseToRemove(exp);
+    setIsRemoving(true);
+  };
+  const handleRemoveSave = async (id) => {
+    try {
+      await apiDeleteExpense(id);
+      const next = expenses.filter(e => e.id !== id);
+      setExpenses(next);
+      onExpensesChange?.(next);
+    } catch (err) {
+      console.error('Error removing expense:', err);
+    }
+    setIsRemoving(false);
   };
 
-  const handleSortOrderChange = (e) => {
-    setSortOrder(e.target.value);
-    setCurrentPage(1);
-  };
-
-  const handleCategoryChange = (e) => {
-    setCategoryFilter(e.target.value);
-    setCurrentPage(1);
-  };
-
-  const searchedExpenses =
-    searchedExpense === ''
-      ? expenses
-      : expenses.filter(exp =>
-          exp.name.toLowerCase().includes(searchedExpense.toLowerCase())
-        );
-
-  const filteredExpenses =
-    categoryFilter === 'All'
-      ? searchedExpenses
-      : searchedExpenses.filter(exp => (exp.category?.name || 'Undefined') === categoryFilter);
-
-  const sortedExpenses = sortExpenses(filteredExpenses, sortFilter, sortOrder);
-  const totalPages = sortedExpenses.length === 0 ? 0 : Math.ceil(sortedExpenses.length / itemsPerPage);
-  const currentExpenses = sortedExpenses.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
-
-  const handleSearchChange = (e) => {
-    setSearched(e.target.value);
-  };
-
-  const handlePreviousPage = () => {
-    if (currentPage > 1) setCurrentPage(currentPage - 1);
-  };
-
-  const handleNextPage = () => {
-    if (currentPage < totalPages) setCurrentPage(currentPage + 1);
-  };
+  // Controls
+  const handlePreviousPage = () => currentPage > 1 && setCurrentPage(prev => prev - 1);
+  const handleNextPage     = () => currentPage < totalPages && setCurrentPage(prev => prev + 1);
+  const handleSearchChange = e => setSearched(e.target.value);
+  const handleSortChange   = e => { setSortFilter(e.target.value); setCurrentPage(1); };
+  const handleOrderChange  = e => { setSortOrder(e.target.value); setCurrentPage(1); };
+  const handleCategoryChange = e => { setCategoryFilter(e.target.value); setCurrentPage(1); };
 
   return (
     <motion.section
@@ -196,7 +182,7 @@ function ExpensesManager({ onExpensesChange }) {
         </div>
         <div className="sortOrder">
           <label htmlFor="sortOrder-filter">Sort order:</label>
-          <select id="sortOrder-filter" value={sortOrder} onChange={handleSortOrderChange}>
+          <select id="sortOrder-filter" value={sortOrder} onChange={handleOrderChange}>
             <option value="Descending">Descending</option>
             <option value="Ascending">Ascending</option>
           </select>
@@ -233,7 +219,7 @@ function ExpensesManager({ onExpensesChange }) {
       <div className="table-wrapper">
         <table className="expenses-table">
           <thead>
-            <tr className="table-header-row">
+            <tr>
               <th>Date</th>
               <th>Name</th>
               <th>Cost ($)</th>
@@ -242,69 +228,52 @@ function ExpensesManager({ onExpensesChange }) {
             </tr>
           </thead>
           <tbody>
-            {currentExpenses.map((expense) => (
-              <tr key={expense.id} className="expense-row">
-                <td>{expense.date}</td>
-                <td>{expense.name}</td>
-                <td>{expense.cost}</td>
-                <td>{expense.category?.name || 'Undefined'}</td>
+            {currentExpenses.map(exp => (
+              <tr key={exp.id}>
+                <td>{exp.date}</td>
+                <td>{exp.name}</td>
+                <td>{exp.cost}</td>
+                <td>{exp.category?.name || 'Undefined'}</td>
                 <td className="row-actions">
-                  <button className="edit-btn" onClick={() => handleEditExpense(expense.id)}>
-                    Edit
-                  </button>
-                  <button className="remove-btn" onClick={() => handleRemoveExpense(expense.id)}>
-                    Remove
-                  </button>
+                  <button className="edit-btn" onClick={() => handleEditExpense(exp.id)}>Edit</button>
+                  <button className="remove-btn" onClick={() => handleRemoveExpense(exp.id)}>Remove</button>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
-        {currentExpenses.length === 0 && (
-          <div className="no-expenses">No expenses to display</div>
-        )}
+        {currentExpenses.length === 0 && <div className="no-expenses">No expenses to display</div>}
       </div>
 
-      {/* Add Expense Button */}
+      {/* Add button */}
       <div className="add-expense">
         <button className="add-btn" onClick={handleAddExpense}>New</button>
       </div>
 
       {/* Pagination */}
       <div className="pagination">
-        <button onClick={handlePreviousPage} disabled={currentPage === 1}>
-          Previous
-        </button>
+        <button onClick={handlePreviousPage} disabled={currentPage === 1}>Previous</button>
         <span>{totalPages === 0 ? 'Page 0 of 0' : `Page ${currentPage} of ${totalPages}`}</span>
-        <button onClick={handleNextPage} disabled={currentPage === totalPages}>
-          Next
-        </button>
+        <button onClick={handleNextPage} disabled={currentPage === totalPages}>Next</button>
       </div>
 
-      {/* Modals for Add/Edit/Remove */}
+      {/* Modals */}
       <AnimatePresence>
-        {isEditing && (
+        {isAdding && <AddExpense onAdd={handleAddSave} onCancel={() => setIsAdding(false)} />}
+        {isEditing && expenseToEdit && (
           <EditExpense
             initialData={expenseToEdit}
             onSave={handleEditSave}
-            onCancel={handleEditCancel}
+            onCancel={() => setIsEditing(false)}
           />
         )}
-        {isAdding && (
-          <AddExpense
-            onAdd={handleAddSave}
-            onCancel={handleAddCancel}
-          />
-        )}
-        {isRemoving && (
+        {isRemoving && expenseToRemove && (
           <RemoveExpense
             onRemove={() => handleRemoveSave(expenseToRemove.id)}
-            onCancel={handleRemoveCancel}
+            onCancel={() => setIsRemoving(false)}
           />
         )}
       </AnimatePresence>
     </motion.section>
   );
 }
-
-export default ExpensesManager;

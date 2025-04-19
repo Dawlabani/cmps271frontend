@@ -17,6 +17,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
   padding: 0.5rem 2rem;
   background: linear-gradient(135deg, var(--secondary), var(--accent));
   color: #fff;

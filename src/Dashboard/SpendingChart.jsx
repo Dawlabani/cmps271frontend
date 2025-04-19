@@ -1,6 +1,5 @@
 // src/Dashboard/SpendingChart.jsx
-import React, { useContext } from 'react';
-import { ExpensesContext } from '../contexts/ExpensesContext';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
   LineChart,
@@ -9,27 +8,42 @@ import {
   XAxis,
   YAxis,
   Tooltip,
-  ResponsiveContainer,
+  ResponsiveContainer
 } from 'recharts';
+import { getExpenses } from '../services/api';
+import './SpendingChart.css';
 
-function SpendingChart() {
-  const contextValue = useContext(ExpensesContext);
-  console.log('ExpensesContext in SpendingChart:', contextValue);
+export default function SpendingChart() {
+  const [expenses, setExpenses] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  if (!contextValue) {
-    return <div>Error: ExpensesContext is undefined!</div>;
+  useEffect(() => {
+    getExpenses()
+      .then(({ data }) => setExpenses(data))
+      .catch(err => console.error('Error fetching expenses:', err))
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) {
+    return (
+      <motion.div
+        className="spending-chart"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5 }}
+      >
+        <p>Loading data…</p>
+      </motion.div>
+    );
   }
-  const { expenses } = contextValue;
-  
-  const aggregatedData = expenses.reduce((acc, expense) => {
-    const date = expense.date;
-    const cost = parseFloat(expense.cost) || 0;
-    acc[date] = (acc[date] || 0) + cost;
+
+  const aggregated = expenses.reduce((acc, e) => {
+    acc[e.date] = (acc[e.date] || 0) + parseFloat(e.cost || 0);
     return acc;
   }, {});
 
-  const spendingData = Object.keys(aggregatedData)
-    .map((date) => ({ date, spending: aggregatedData[date] }))
+  const data = Object.entries(aggregated)
+    .map(([date, spending]) => ({ date, spending }))
     .sort((a, b) => new Date(a.date) - new Date(b.date));
 
   return (
@@ -37,33 +51,17 @@ function SpendingChart() {
       className="spending-chart"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      transition={{ duration: 0.5, ease: 'easeOut' }}
+      transition={{ duration: 0.5 }}
     >
       <ResponsiveContainer width="100%" height={300}>
-        <LineChart data={spendingData} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
+        <LineChart data={data} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
           <CartesianGrid stroke="#ccc" strokeDasharray="5 5" />
-          <XAxis
-            dataKey="date"
-            tick={{ fontSize: 12, fill: '#2d3436' }}
-            label={{ value: 'Date', position: 'insideBottomRight', offset: 0, fontSize: 12 }}
-          />
-          <YAxis
-            tick={{ fontSize: 12, fill: '#2d3436' }}
-            label={{ value: 'Spending ($)', angle: -90, position: 'insideLeft', fontSize: 12 }}
-          />
+          <XAxis dataKey="date" />
+          <YAxis />
           <Tooltip />
-          <Line
-            type="monotone"
-            dataKey="spending"
-            stroke="#00b894"
-            strokeWidth={2}
-            dot={{ r: 3 }}
-            activeDot={{ r: 5 }}
-          />
+          <Line type="monotone" dataKey="spending" stroke="#00b894" strokeWidth={2} />
         </LineChart>
       </ResponsiveContainer>
     </motion.div>
   );
 }
-
-export default SpendingChart;

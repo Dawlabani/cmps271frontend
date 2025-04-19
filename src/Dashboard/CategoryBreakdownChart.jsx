@@ -1,32 +1,62 @@
 // src/components/CategoryBreakdownChart.jsx
-import React, { useContext } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
-import { ExpensesContext } from '../contexts/ExpensesContext';
+import {
+  PieChart,
+  Pie,
+  Cell,
+  ResponsiveContainer,
+  Tooltip,
+  Legend
+} from 'recharts';
+import { getExpenses } from '../services/api';
+import './CategoryBreakdownChart.css';
 
-function CategoryBreakdownChart() {
-  const { expenses } = useContext(ExpensesContext);
+const COLORS = [
+  '#00b894', '#2d3436', '#e74c3c',
+  '#f39c12', '#3498db', '#FF5733', '#9b59b6'
+];
 
-  const categoryDataMap = expenses.reduce((acc, expense) => {
-    const catName = expense.category?.name || 'Undefined';
-    const cost = parseFloat(expense.cost) || 0;
-    acc[catName] = (acc[catName] || 0) + cost;
+export default function CategoryBreakdownChart() {
+  const [expenses, setExpenses] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getExpenses()
+      .then(({ data }) => setExpenses(data))
+      .catch(err => console.error('Error fetching expenses:', err))
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) {
+    return (
+      <motion.div
+        className="category-breakdown-chart"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5 }}
+      >
+        <p>Loading data…</p>
+      </motion.div>
+    );
+  }
+
+  const categoryDataMap = expenses.reduce((acc, exp) => {
+    const cat = exp.category?.name || 'Undefined';
+    acc[cat] = (acc[cat] || 0) + parseFloat(exp.cost || 0);
     return acc;
   }, {});
 
-  const categoryData = Object.keys(categoryDataMap).map((key) => ({
-    category: key,
-    value: categoryDataMap[key],
-  }));
-
-  const COLORS = ['#00b894', '#2d3436', '#e74c3c', '#f39c12', '#3498db', '#FF5733', '#9b59b6'];
+  const categoryData = Object.entries(categoryDataMap).map(
+    ([category, value]) => ({ category, value })
+  );
 
   return (
     <motion.div
       className="category-breakdown-chart"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      transition={{ duration: 0.5, ease: 'easeOut' }}
+      transition={{ duration: 0.5 }}
     >
       <ResponsiveContainer width="100%" height={300}>
         <PieChart>
@@ -39,10 +69,9 @@ function CategoryBreakdownChart() {
             innerRadius={60}
             outerRadius={100}
             label
-            fill="#8884d8"
           >
-            {categoryData.map((entry, index) => (
-              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+            {categoryData.map((_, i) => (
+              <Cell key={i} fill={COLORS[i % COLORS.length]} />
             ))}
           </Pie>
           <Tooltip />
@@ -52,5 +81,3 @@ function CategoryBreakdownChart() {
     </motion.div>
   );
 }
-
-export default CategoryBreakdownChart;
