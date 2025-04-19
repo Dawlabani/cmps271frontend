@@ -259,7 +259,15 @@ export default function ExpensesManager({ onExpensesChange }) {
 
       {/* Modals */}
       <AnimatePresence>
-        {isAdding && <AddExpense onAdd={handleAddSave} onCancel={() => setIsAdding(false)} />}
+      {isAdding && (<AddExpense
+      onAdd={async newExp => {try {await apiAddExpense(newExp); 
+      const { data: all } = await getExpenses();
+      setExpenses(all);
+      onExpensesChange?.(all);
+      } catch (err) {console.error('Error adding expense:', err);} finally {setIsAdding(false);}
+}}
+onCancel={() => setIsAdding(false)}
+/>)}
         {isEditing && expenseToEdit && (
           <EditExpense
             initialData={expenseToEdit}
