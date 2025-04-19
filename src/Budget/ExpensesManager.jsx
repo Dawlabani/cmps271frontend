@@ -8,152 +8,198 @@ import {
   getExpenses,
   addExpense as apiAddExpense,
   updateExpense as apiUpdateExpense,
-  deleteExpense as apiDeleteExpense,
+  deleteExpense as apiDeleteExpense
 } from '../services/api';
 import './ExpensesManager.css';
 
 export default function ExpensesManager({ onExpensesChange }) {
-  // --- data state ---
+  // Local state instead of context
   const [expenses, setExpenses] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // --- modal state ---
+  // Filtering & sorting state
+  const [categoryFilter, setCategoryFilter] = useState('All');
+  const [sortFilter, setSortFilter] = useState('Date');
+  const [sortOrder, setSortOrder] = useState('Descending');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [searchedExpense, setSearched] = useState('');
+
+  // Modal state
   const [isAdding, setIsAdding] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [editingExpense, setEditingExpense] = useState(null);
   const [isRemoving, setIsRemoving] = useState(false);
-  const [removingExpense, setRemovingExpense] = useState(null);
+  const [expenseToEdit, setExpenseToEdit] = useState(null);
+  const [expenseToRemove, setExpenseToRemove] = useState(null);
 
-  // --- filters & pagination state ---
-  const [categoryFilter, setCategoryFilter] = useState('All');
-  const [sortFilter, setSortFilter]       = useState('Date');
-  const [sortOrder, setSortOrder]         = useState('Descending');
-  const [searchText, setSearchText]       = useState('');
-  const [page, setPage]                   = useState(1);
-  const perPage = 10;
+  const itemsPerPage = 10;
 
-  // --- load on mount ---
+  // Fetch expenses on mount
   useEffect(() => {
-    async function load() {
-      try {
-        const { data } = await getExpenses();
+    setLoading(true);
+    getExpenses()
+      .then(({ data }) => {
         setExpenses(data);
         onExpensesChange?.(data);
-      } catch (err) {
-        console.error('Error fetching expenses:', err);
-      } finally {
-        setLoading(false);
-      }
-    }
-    load();
-  }, [onExpensesChange]);
+      })
+      .catch(err => console.error('Error fetching expenses:', err))
+      .finally(() => setLoading(false));
+  }, []);
 
-  const updateList = newList => {
-    setExpenses(newList);
-    onExpensesChange?.(newList);
+  // Show loading placeholder
+  if (loading) {
+    return (
+      <motion.section
+        className="expenses-manager"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: 'easeOut' }}
+      >
+        <p>Loading data…</p>
+      </motion.section>
+    );
+  }
+
+  // Sorting helper
+  const sortExpenses = (arr, criteria, order) => {
+    const sorted = [...arr];
+    switch (criteria) {
+      case 'Date':
+        sorted.sort((a, b) => new Date(a.date) - new Date(b.date));
+        break;
+      case 'Name':
+        sorted.sort((a, b) => a.name.localeCompare(b.name));
+        break;
+      case 'Cost':
+        sorted.sort((a, b) => a.cost - b.cost);
+        break;
+      case 'Category':
+        sorted.sort((a, b) =>
+          (a.category?.name || '').localeCompare(b.category?.name || '')
+        );
+        break;
+      default:
+        break;
+    }
+    if (order === 'Descending') sorted.reverse();
+    return sorted;
   };
 
-  // --- ADD ---
-  const handleAdd = async form => {
+  // Filter, search, paginate
+  const searched = !searchedExpense
+    ? expenses
+    : expenses.filter(e =>
+        e.name.toLowerCase().includes(searchedExpense.toLowerCase())
+      );
+
+  const filtered = categoryFilter === 'All'
+    ? searched
+    : searched.filter(e => (e.category?.name || 'Undefined') === categoryFilter);
+
+  const sortedList = sortExpenses(filtered, sortFilter, sortOrder);
+  const totalPages = sortedList.length
+    ? Math.ceil(sortedList.length / itemsPerPage)
+    : 0;
+  const currentExpenses = sortedList.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  // Handlers: Add
+  const handleAddExpense = () => setIsAdding(true);
+  const handleAddSave = async (newExpense) => {
     try {
-      const { data: created } = await apiAddExpense(form);
-      updateList([created, ...expenses]);
+      const { data } = await apiAddExpense(newExpense);
+      const next = [...expenses, data];
+      setExpenses(next);
+      onExpensesChange?.(next);
     } catch (err) {
       console.error('Error adding expense:', err);
-    } finally {
-      setIsAdding(false);
     }
+    setIsAdding(false);
   };
 
-  // --- EDIT ---
-  const handleEdit = async updated => {
+  // Handlers: Edit
+  const handleEditExpense = (id) => {
+    const exp = expenses.find(e => e.id === id);
+    setExpenseToEdit(exp);
+    setIsEditing(true);
+  };
+  const handleEditSave = async (updated) => {
     try {
-      const { data: saved } = await apiUpdateExpense(updated.id, updated);
-      updateList(expenses.map(e => e.id === saved.id ? saved : e));
+      const { data } = await apiUpdateExpense(updated.id, updated);
+      const next = expenses.map(e => e.id === data.id ? data : e);
+      setExpenses(next);
+      onExpensesChange?.(next);
     } catch (err) {
       console.error('Error updating expense:', err);
-    } finally {
-      setIsEditing(false);
-      setEditingExpense(null);
     }
+    setIsEditing(false);
   };
 
-  // --- REMOVE ---
-  const handleRemove = async id => {
+  // Handlers: Remove
+  const handleRemoveExpense = (id) => {
+    const exp = expenses.find(e => e.id === id);
+    setExpenseToRemove(exp);
+    setIsRemoving(true);
+  };
+  const handleRemoveSave = async (id) => {
     try {
       await apiDeleteExpense(id);
-      updateList(expenses.filter(e => e.id !== id));
+      const next = expenses.filter(e => e.id !== id);
+      setExpenses(next);
+      onExpensesChange?.(next);
     } catch (err) {
-      console.error('Error deleting expense:', err);
-    } finally {
-      setIsRemoving(false);
-      setRemovingExpense(null);
+      console.error('Error removing expense:', err);
     }
+    setIsRemoving(false);
   };
 
-  // --- filter / sort / paginate ---
-  const filtered = expenses
-    .filter(e =>
-      (categoryFilter === 'All' || (e.category?.name || 'Undefined') === categoryFilter)
-      && e.name.toLowerCase().includes(searchText.toLowerCase())
-    )
-    .sort((a, b) => {
-      let cmp = 0;
-      if (sortFilter === 'Date') cmp = new Date(a.date) - new Date(b.date);
-      if (sortFilter === 'Name') cmp = a.name.localeCompare(b.name);
-      if (sortFilter === 'Cost') cmp = a.cost - b.cost;
-      if (sortFilter === 'Category') cmp = (a.category?.name || '').localeCompare(b.category?.name || '');
-      return sortOrder === 'Ascending' ? cmp : -cmp;
-    });
-
-  const totalPages = Math.ceil(filtered.length / perPage);
-  const pageData   = filtered.slice((page - 1) * perPage, page * perPage);
-
-  // --- handlers for filters & search ---
-  const handleSortChange     = e => { setSortFilter(e.target.value); setPage(1); };
-  const handleOrderChange    = e => { setSortOrder(e.target.value); setPage(1); };
-  const handleCategoryChange = e => { setCategoryFilter(e.target.value); setPage(1); };
-  const handleSearchChange   = e => { setSearchText(e.target.value); setPage(1); };
-
-  if (loading) {
-    return <div className="expenses-manager"><p>Loading expenses…</p></div>;
-  }
+  // Controls
+  const handlePreviousPage = () => currentPage > 1 && setCurrentPage(prev => prev - 1);
+  const handleNextPage     = () => currentPage < totalPages && setCurrentPage(prev => prev + 1);
+  const handleSearchChange = e => setSearched(e.target.value);
+  const handleSortChange   = e => { setSortFilter(e.target.value); setCurrentPage(1); };
+  const handleOrderChange  = e => { setSortOrder(e.target.value); setCurrentPage(1); };
+  const handleCategoryChange = e => { setCategoryFilter(e.target.value); setCurrentPage(1); };
 
   return (
     <motion.section
       className="expenses-manager"
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
+      transition={{ duration: 0.5, ease: 'easeOut' }}
     >
       {/* Filters */}
       <div className="filters">
         <div className="sort">
-          <label>Sort by:</label>
-          <select value={sortFilter} onChange={handleSortChange}>
-            <option>Date</option><option>Name</option>
-            <option>Cost</option><option>Category</option>
+          <label htmlFor="sort-filter">Sort by:</label>
+          <select id="sort-filter" value={sortFilter} onChange={handleSortChange}>
+            <option value="Date">Date</option>
+            <option value="Name">Name</option>
+            <option value="Cost">Cost</option>
+            <option value="Category">Category</option>
           </select>
         </div>
         <div className="sortOrder">
-          <label>Order:</label>
-          <select value={sortOrder} onChange={handleOrderChange}>
-            <option>Descending</option><option>Ascending</option>
+          <label htmlFor="sortOrder-filter">Sort order:</label>
+          <select id="sortOrder-filter" value={sortOrder} onChange={handleOrderChange}>
+            <option value="Descending">Descending</option>
+            <option value="Ascending">Ascending</option>
           </select>
         </div>
         <div className="category">
-          <label>Category:</label>
-          <select value={categoryFilter} onChange={handleCategoryChange}>
-            <option>All</option>
-            <option>Debts & Loans</option>
-            <option>Savings & Investments</option>
-            <option>Shopping & Lifestyle</option>
-            <option>Food & Dining</option>
-            <option>Health & Wellness</option>
-            <option>Travel & Leisure</option>
-            <option>Education & Self-Development</option>
-            <option>Giving & Charity</option>
-            <option>Other</option>
+          <label htmlFor="category-filter">Filter by Category:</label>
+          <select id="category-filter" value={categoryFilter} onChange={handleCategoryChange}>
+            <option value="All">All</option>
+            <option value="Debts & Loans">Debts & Loans</option>
+            <option value="Savings & Investments">Savings & Investments</option>
+            <option value="Shopping & Lifestyle">Shopping & Lifestyle</option>
+            <option value="Food & Dining">Food & Dining</option>
+            <option value="Health & Wellness">Health & Wellness</option>
+            <option value="Travel & Leisure">Travel & Leisure</option>
+            <option value="Education & Self-Development">Education & Self-Development</option>
+            <option value="Giving & Charity">Giving & Charity</option>
+            <option value="Other">Other</option>
           </select>
         </div>
       </div>
@@ -161,9 +207,10 @@ export default function ExpensesManager({ onExpensesChange }) {
       {/* Search */}
       <div className="Search">
         <input
+          className="searchedExpense"
           type="text"
           placeholder="Search expenses"
-          value={searchText}
+          value={searchedExpense}
           onChange={handleSearchChange}
         />
       </div>
@@ -173,64 +220,60 @@ export default function ExpensesManager({ onExpensesChange }) {
         <table className="expenses-table">
           <thead>
             <tr>
-              <th>Date</th><th>Name</th><th>Cost</th><th>Category</th><th>Actions</th>
+              <th>Date</th>
+              <th>Name</th>
+              <th>Cost ($)</th>
+              <th>Category</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
-            {pageData.map(exp => (
+            {currentExpenses.map(exp => (
               <tr key={exp.id}>
                 <td>{exp.date}</td>
                 <td>{exp.name}</td>
                 <td>{exp.cost}</td>
                 <td>{exp.category?.name || 'Undefined'}</td>
-                <td>
-                  <button onClick={() => { setEditingExpense(exp); setIsEditing(true); }}>
-                    Edit
-                  </button>
-                  <button onClick={() => { setRemovingExpense(exp); setIsRemoving(true); }}>
-                    Remove
-                  </button>
+                <td className="row-actions">
+                  <button className="edit-btn" onClick={() => handleEditExpense(exp.id)}>Edit</button>
+                  <button className="remove-btn" onClick={() => handleRemoveExpense(exp.id)}>Remove</button>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
-        {pageData.length === 0 && <div className="no-expenses">No expenses to display</div>}
+        {currentExpenses.length === 0 && <div className="no-expenses">No expenses to display</div>}
+      </div>
+
+      {/* Add button */}
+      <div className="add-expense">
+        <button className="add-btn" onClick={handleAddExpense}>New</button>
       </div>
 
       {/* Pagination */}
       <div className="pagination">
-        <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page <= 1}>
-          Previous
-        </button>
-        <span>Page {totalPages === 0 ? 0 : page} of {totalPages}</span>
-        <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page >= totalPages}>
-          Next
-        </button>
+        <button onClick={handlePreviousPage} disabled={currentPage === 1}>Previous</button>
+        <span>{totalPages === 0 ? 'Page 0 of 0' : `Page ${currentPage} of ${totalPages}`}</span>
+        <button onClick={handleNextPage} disabled={currentPage === totalPages}>Next</button>
       </div>
 
       {/* Modals */}
       <AnimatePresence>
-        {isAdding && <AddExpense onAdd={handleAdd} onCancel={() => setIsAdding(false)} />}
-        {isEditing && editingExpense && (
+        {isAdding && <AddExpense onAdd={handleAddSave} onCancel={() => setIsAdding(false)} />}
+        {isEditing && expenseToEdit && (
           <EditExpense
-            initialData={editingExpense}
-            onSave={handleEdit}
+            initialData={expenseToEdit}
+            onSave={handleEditSave}
             onCancel={() => setIsEditing(false)}
           />
         )}
-        {isRemoving && removingExpense && (
+        {isRemoving && expenseToRemove && (
           <RemoveExpense
-            onRemove={() => handleRemove(removingExpense.id)}
+            onRemove={() => handleRemoveSave(expenseToRemove.id)}
             onCancel={() => setIsRemoving(false)}
           />
         )}
       </AnimatePresence>
-
-      {/* Add button */}
-      <div className="add-expense">
-        <button onClick={() => setIsAdding(true)}>New</button>
-      </div>
     </motion.section>
   );
 }

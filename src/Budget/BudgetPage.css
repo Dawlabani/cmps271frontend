@@ -13,6 +13,7 @@
   justify-content: center;
   align-items: center;
   min-height: 100vh; /* Ensure it takes the full height of the viewport */
+  background-color: var(--background);
 }
 
 .budget-page-content {
@@ -91,6 +92,6 @@
   --primary: #2d3436;
   --secondary: #00b894;
   --light: #ffffff;
-  --background: #f4f4f4;
+  --background: #e8f5e9;
   --shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
