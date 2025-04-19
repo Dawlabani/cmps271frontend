@@ -1,21 +1,25 @@
+// src/components/NavBar.jsx
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './NavBar.css';
 import Button from '../Dashboard/Button';
 
 function NavBar() {
-  
   const navigate = useNavigate();
   const token = localStorage.getItem('token');
   const isLoggedIn = Boolean(token);
 
-  // Modal state for protected links and for "Join Now"
+  // for protected modals
   const [showProtectedModal, setShowProtectedModal] = useState(false);
   const [showJoinModal, setShowJoinModal] = useState(false);
+
+  // for mobile hamburger
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   const handleProtectedNavigation = (route) => {
     if (isLoggedIn) {
       navigate(route);
+      setMobileOpen(false);
     } else {
       setShowProtectedModal(true);
     }
@@ -25,11 +29,24 @@ function NavBar() {
     <>
       <nav className="navbar">
         <div className="navbar-brand">
-          <h2 onClick={() => navigate('/')}>SDG Finance</h2>
+          <h2 onClick={() => { navigate('/'); setMobileOpen(false); }}>
+            SDG Finance
+          </h2>
+          <button
+            className={`hamburger ${mobileOpen ? 'open' : ''}`}
+            onClick={() => setMobileOpen(m => !m)}
+            aria-label="Toggle menu"
+          >
+            <span />
+            <span />
+            <span />
+          </button>
         </div>
 
-        <div className="navbar-links">
-          <button onClick={() => navigate('/')}>Home</button>
+        <div className={`navbar-links ${mobileOpen ? 'open' : ''}`}>
+          <button onClick={() => { navigate('/'); setMobileOpen(false); }}>
+            Home
+          </button>
           <button onClick={() => handleProtectedNavigation('/dashboard')}>
             Dashboard
           </button>
@@ -49,7 +66,7 @@ function NavBar() {
             <Button
               text="Profile"
               className="navbar-profile-button"
-              onClick={() => navigate('/profile')}
+              onClick={() => { navigate('/profile'); setMobileOpen(false); }}
             />
           ) : (
             <Button
