@@ -2,7 +2,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import './AddExpense.css';
-import { addExpense } from '../services/api';
 
 function AddExpense({ onAdd, onCancel }) {
   const [formData, setFormData] = useState({
@@ -98,7 +97,6 @@ function AddExpense({ onAdd, onCancel }) {
     }
 
     try {
-      const response = await addExpense(formData);
       onAdd(response.data);
     } catch (err) {
       console.error('Error adding expense:', err);

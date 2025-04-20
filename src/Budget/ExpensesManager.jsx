@@ -111,23 +111,20 @@ export default function ExpensesManager({ onExpensesChange }) {
 
   // Handlers: Add
   const handleAddExpense = () => setIsAdding(true);
-  const handleAddSave = async newExpense => {
+  const handleAddSave = async form => {
     try {
-      const { data } = await apiAddExpense(newExpense);
-      const next = [...expenses, data];
-      setExpenses(next);
-      onExpensesChange?.(next);
-  
-      // show our UI‑modal
-      const pts = Math.round(data.sustainabilityScore || 0);
-      setEarnedPoints(pts);
+      const { data } = await apiAddExpense(form);
+      // update list
+      setExpenses(e => [...e, data]);
+      // show modal
+      setEarnedPoints(Math.round(data.sustainabilityScore || 0));
       setShowCongrats(true);
     } catch (err) {
       console.error('Error adding expense:', err);
     } finally {
       setIsAdding(false);
     }
-  };  
+  };
 
   // Handlers: Edit
   const handleEditExpense = (id) => {
