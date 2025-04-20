@@ -125,9 +125,14 @@ export default function ExpensesManager({ onExpensesChange }) {
       // show eco‑points
       setEarnedPoints(Math.round(newExpense.sustainabilityScore || 0));
       setShowCongrats(true);
-    } catch (error) {
-      console.error('Error adding expense:', error);
-      // you could set an error state here if you want to render a message
+    } catch (err) {
+      console.error('Error adding expense:', err);
+      console.error('→ server said:', err.response?.data);
+      setError(
+        err.response?.data?.error ||
+        err.response?.data?.message ||
+        'Failed to add expense.'
+      );
     } finally {
       // hide the “Adding…” UI
       setIsAdding(false);
