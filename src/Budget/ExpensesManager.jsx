@@ -106,7 +106,7 @@ export default function ExpensesManager({ onExpensesChange }) {
 
   // Handlers: Add
   const handleAddExpense = () => setIsAdding(true);
-  cconst handleAddSave = async (newExpense) => {
+  const handleAddSave = async (newExpense) => {
     try {
       const { data } = await apiAddExpense(newExpense);
       // immediately update list
