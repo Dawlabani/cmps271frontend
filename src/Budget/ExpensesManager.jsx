@@ -357,7 +357,6 @@ export default function ExpensesManager({ onExpensesChange }) {
                 className="add-btn"
                 onClick={() => {
                   setShowCongrats(false);
-                  window.location.reload();
                 }}
               >
                 OK
