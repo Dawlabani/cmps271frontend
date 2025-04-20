@@ -12,10 +12,15 @@ import {
 } from '../services/api';
 import './ExpensesManager.css';
 
+
 export default function ExpensesManager({ onExpensesChange }) {
+  
   // Local state instead of context
   const [expenses, setExpenses] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showCongrats, setShowCongrats] = useState(false);
+  const [earnedPoints,  setEarnedPoints]  = useState(0);
+
 
   // Filtering & sorting state
   const [categoryFilter, setCategoryFilter] = useState('All');
@@ -106,24 +111,23 @@ export default function ExpensesManager({ onExpensesChange }) {
 
   // Handlers: Add
   const handleAddExpense = () => setIsAdding(true);
-  const handleAddSave = async (newExpense) => {
+  const handleAddSave = async newExpense => {
     try {
       const { data } = await apiAddExpense(newExpense);
-      // immediately update list
       const next = [...expenses, data];
       setExpenses(next);
       onExpensesChange?.(next);
   
-      // show a little window and then reload
-      const points = Math.round(data.sustainabilityScore || 0);
-      alert(`🎉 Congratulations! You logged an expense and received ${points} eco‑points.`);
-      window.location.reload();
+      // show our UI‑modal
+      const pts = Math.round(data.sustainabilityScore || 0);
+      setEarnedPoints(pts);
+      setShowCongrats(true);
     } catch (err) {
       console.error('Error adding expense:', err);
     } finally {
       setIsAdding(false);
     }
-  };
+  };  
 
   // Handlers: Edit
   const handleEditExpense = (id) => {
@@ -291,4 +295,32 @@ onCancel={() => setIsAdding(false)}
       </AnimatePresence>
     </motion.section>
   );
+  {showCongrats && (
+    <motion.div
+      className="modal-overlay"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+    >
+      <motion.div
+        className="modal-content"
+        initial={{ scale: 0.8 }}
+        animate={{ scale: 1 }}
+        exit={{ scale: 0.8 }}
+        transition={{ duration: 0.3 }}
+      >
+        <h2>🎉 Congratulations!</h2>
+        <p>You earned <strong>{earnedPoints}</strong> eco‑points.</p>
+        <button
+          className="add-btn"
+          onClick={() => {
+            setShowCongrats(false);
+            window.location.reload();
+          }}
+        >
+          OK
+        </button>
+      </motion.div>
+    </motion.div>
+  )}  
 }
