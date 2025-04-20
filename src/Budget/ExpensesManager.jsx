@@ -98,32 +98,42 @@ export default function ExpensesManager({ onExpensesChange }) {
   );
 
   const handleAddExpense = () => setIsAdding(true);
-  const handleAddSave = async form => {
+  const handleAddSave = async (formData) => {
+    // show the “Adding…” UI
+    setIsAdding(true);
+  
+    // build your API payload
+    const payload = {
+      ...formData,
+      category:
+        typeof formData.category === 'object'
+          ? formData.category.name
+          : formData.category,
+    };
+  
     try {
-      // flatten category into a string
-      const payload = {
-        date: form.date,
-        name: form.name,
-        cost: form.cost,
-        category: typeof form.category === 'object'
-          ? form.category.name
-          : form.category,
-        details: form.details
-      };
-      const { data } = await apiAddExpense(payload);
-
-      setExpenses(e => [...e, data]);
-      onExpensesChange?.(e => [...e, data]);
-
-      setEarnedPoints(Math.round(data.sustainabilityScore || 0));
+      // call the backend
+      const { data: newExpense } = await apiAddExpense(payload);
+  
+      // append locally and notify parent exactly once
+      setExpenses((prev) => {
+        const updated = [...prev, newExpense];
+        onExpensesChange?.(updated);
+        return updated;
+      });
+  
+      // show eco‑points
+      setEarnedPoints(Math.round(newExpense.sustainabilityScore || 0));
       setShowCongrats(true);
-    } catch (err) {
-      console.error('Error adding expense:', err);
+    } catch (error) {
+      console.error('Error adding expense:', error);
+      // you could set an error state here if you want to render a message
     } finally {
+      // hide the “Adding…” UI
       setIsAdding(false);
     }
   };
-
+  
   const handleEditExpense = id => {
     setExpenseToEdit(expenses.find(e => e.id === id));
     setIsEditing(true);
