@@ -19,12 +19,13 @@ export default function ExpensesManager({ onExpensesChange }) {
   const [showCongrats, setShowCongrats] = useState(false);
   const [earnedPoints, setEarnedPoints] = useState(0);
 
-  // Filtering & sorting state
+  // Filters/sort/search/pagination state
   const [categoryFilter, setCategoryFilter] = useState('All');
   const [sortFilter, setSortFilter] = useState('Date');
   const [sortOrder, setSortOrder] = useState('Descending');
   const [currentPage, setCurrentPage] = useState(1);
   const [searchedExpense, setSearched] = useState('');
+  const itemsPerPage = 10;
 
   // Modal state
   const [isAdding, setIsAdding] = useState(false);
@@ -33,9 +34,6 @@ export default function ExpensesManager({ onExpensesChange }) {
   const [expenseToEdit, setExpenseToEdit] = useState(null);
   const [expenseToRemove, setExpenseToRemove] = useState(null);
 
-  const itemsPerPage = 10;
-
-  // initial fetch
   useEffect(() => {
     setLoading(true);
     getExpenses()
@@ -60,7 +58,7 @@ export default function ExpensesManager({ onExpensesChange }) {
     );
   }
 
-  // sorting helper
+  // Sorting helper
   const sortExpenses = (arr, criteria, order) => {
     const sorted = [...arr];
     switch (criteria) {
@@ -85,7 +83,7 @@ export default function ExpensesManager({ onExpensesChange }) {
     return sorted;
   };
 
-  // filter/search/paginate
+  // Filter, search, paginate
   const searched = !searchedExpense
     ? expenses
     : expenses.filter(e =>
@@ -97,13 +95,15 @@ export default function ExpensesManager({ onExpensesChange }) {
     : searched.filter(e => (e.category?.name || 'Undefined') === categoryFilter);
 
   const sortedList = sortExpenses(filtered, sortFilter, sortOrder);
-  const totalPages = sortedList.length ? Math.ceil(sortedList.length / itemsPerPage) : 0;
+  const totalPages = sortedList.length
+    ? Math.ceil(sortedList.length / itemsPerPage)
+    : 0;
   const currentExpenses = sortedList.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
 
-  // Add
+  // Add handlers
   const handleAddExpense = () => {
     setError(null);
     setIsAdding(true);
@@ -111,10 +111,11 @@ export default function ExpensesManager({ onExpensesChange }) {
   const handleAddSave = async form => {
     setError(null);
     try {
-      // ensure category is a string
       const payload = {
         ...form,
-        category: typeof form.category === 'object' ? form.category.name : form.category
+        category: typeof form.category === 'object'
+          ? form.category.name
+          : form.category
       };
       const { data } = await apiAddExpense(payload);
       setExpenses(prev => {
@@ -132,7 +133,7 @@ export default function ExpensesManager({ onExpensesChange }) {
     }
   };
 
-  // Edit
+  // Edit handlers
   const handleEditExpense = id => {
     setExpenseToEdit(expenses.find(e => e.id === id));
     setIsEditing(true);
@@ -152,7 +153,7 @@ export default function ExpensesManager({ onExpensesChange }) {
     }
   };
 
-  // Remove
+  // Remove handlers
   const handleRemoveExpense = id => {
     setExpenseToRemove(expenses.find(e => e.id === id));
     setIsRemoving(true);
@@ -172,13 +173,24 @@ export default function ExpensesManager({ onExpensesChange }) {
     }
   };
 
-  // pagination & filters
-  const handlePreviousPage = () => currentPage > 1 && setCurrentPage(p => p - 1);
-  const handleNextPage     = () => currentPage < totalPages && setCurrentPage(p => p + 1);
+  // Pagination & filters
+  const handlePreviousPage = () =>
+    currentPage > 1 && setCurrentPage(p => p - 1);
+  const handleNextPage = () =>
+    currentPage < totalPages && setCurrentPage(p => p + 1);
   const handleSearchChange = e => setSearched(e.target.value);
-  const handleSortChange   = e => { setSortFilter(e.target.value); setCurrentPage(1); };
-  const handleOrderChange  = e => { setSortOrder(e.target.value); setCurrentPage(1); };
-  const handleCategoryChange = e => { setCategoryFilter(e.target.value); setCurrentPage(1); };
+  const handleSortChange = e => {
+    setSortFilter(e.target.value);
+    setCurrentPage(1);
+  };
+  const handleOrderChange = e => {
+    setSortOrder(e.target.value);
+    setCurrentPage(1);
+  };
+  const handleCategoryChange = e => {
+    setCategoryFilter(e.target.value);
+    setCurrentPage(1);
+  };
 
   return (
     <motion.section
@@ -189,34 +201,42 @@ export default function ExpensesManager({ onExpensesChange }) {
     >
       {error && <p className="error-text">{error}</p>}
 
-      {/* filters */}
+      {/* Filters */}
       <div className="filters">
         <div className="sort">
           <label>Sort by:</label>
           <select value={sortFilter} onChange={handleSortChange}>
-            <option>Date</option><option>Name</option><option>Cost</option><option>Category</option>
+            <option>Date</option>
+            <option>Name</option>
+            <option>Cost</option>
+            <option>Category</option>
           </select>
         </div>
         <div className="sortOrder">
           <label>Order:</label>
           <select value={sortOrder} onChange={handleOrderChange}>
-            <option>Descending</option><option>Ascending</option>
+            <option>Descending</option>
+            <option>Ascending</option>
           </select>
         </div>
         <div className="category">
           <label>Category:</label>
           <select value={categoryFilter} onChange={handleCategoryChange}>
             <option>All</option>
-            <option>Debts & Loans</option><option>Savings & Investments</option>
-            <option>Shopping & Lifestyle</option><option>Food & Dining</option>
-            <option>Health & Wellness</option><option>Travel & Leisure</option>
-            <option>Education & Self-Development</option><option>Giving & Charity</option>
+            <option>Debts & Loans</option>
+            <option>Savings & Investments</option>
+            <option>Shopping & Lifestyle</option>
+            <option>Food & Dining</option>
+            <option>Health & Wellness</option>
+            <option>Travel & Leisure</option>
+            <option>Education & Self-Development</option>
+            <option>Giving & Charity</option>
             <option>Other</option>
           </select>
         </div>
       </div>
 
-      {/* search */}
+      {/* Search */}
       <div className="Search">
         <input
           type="text"
@@ -226,12 +246,16 @@ export default function ExpensesManager({ onExpensesChange }) {
         />
       </div>
 
-      {/* table */}
+      {/* Table */}
       <div className="table-wrapper">
         <table className="expenses-table">
           <thead>
             <tr>
-              <th>Date</th><th>Name</th><th>Cost ($)</th><th>Category</th><th>Actions</th>
+              <th>Date</th>
+              <th>Name</th>
+              <th>Cost ($)</th>
+              <th>Category</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -242,35 +266,62 @@ export default function ExpensesManager({ onExpensesChange }) {
                 <td>{exp.cost}</td>
                 <td>{exp.category?.name || 'Undefined'}</td>
                 <td className="row-actions">
-                  <button onClick={() => handleEditExpense(exp.id)}>Edit</button>
-                  <button onClick={() => handleRemoveExpense(exp.id)}>Remove</button>
+                  <button
+                    className="edit-btn"
+                    onClick={() => handleEditExpense(exp.id)}
+                  >
+                    Edit
+                  </button>
+                  <button
+                    className="remove-btn"
+                    onClick={() => handleRemoveExpense(exp.id)}
+                  >
+                    Remove
+                  </button>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
-        {!currentExpenses.length && <div className="no-expenses">No expenses to display</div>}
+        {!currentExpenses.length && (
+          <div className="no-expenses">No expenses to display</div>
+        )}
       </div>
 
-      {/* new */}
+      {/* New */}
       <div className="add-expense">
-        <button onClick={handleAddExpense}>New</button>
+        <button className="add-btn" onClick={handleAddExpense}>
+          New
+        </button>
       </div>
 
-      {/* pagination */}
+      {/* Pagination */}
       <div className="pagination">
-        <button onClick={handlePreviousPage} disabled={currentPage === 1}>Previous</button>
+        <button
+          onClick={handlePreviousPage}
+          disabled={currentPage === 1}
+        >
+          Previous
+        </button>
         <span>
           {totalPages === 0
             ? 'Page 0 of 0'
             : `Page ${currentPage} of ${totalPages}`}
         </span>
-        <button onClick={handleNextPage} disabled={currentPage === totalPages}>Next</button>
+        <button
+          onClick={handleNextPage}
+          disabled={currentPage === totalPages}
+        >
+          Next
+        </button>
       </div>
 
       <AnimatePresence>
         {isAdding && (
-          <AddExpense onAdd={handleAddSave} onCancel={() => setIsAdding(false)} />
+          <AddExpense
+            onAdd={handleAddSave}
+            onCancel={() => setIsAdding(false)}
+          />
         )}
         {isEditing && expenseToEdit && (
           <EditExpense
