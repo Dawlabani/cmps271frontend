@@ -101,7 +101,7 @@ export default function ExpensesManager({ onExpensesChange }) {
   const handleAddSave = async (formData) => {
     setError(null);
     setIsAdding(true);
-  
+
     const payload = {
       ...formData,
       category:
@@ -109,7 +109,7 @@ export default function ExpensesManager({ onExpensesChange }) {
           ? formData.category.name
           : formData.category,
     };
-  
+
     try {
       const { data: newExpense } = await apiAddExpense(payload);
       setExpenses((prev) => {
@@ -120,11 +120,7 @@ export default function ExpensesManager({ onExpensesChange }) {
       setEarnedPoints(Math.round(newExpense.sustainabilityScore || 0));
       setShowCongrats(true);
     } catch (err) {
-      setError(
-        err.response?.data?.error ||
-        err.response?.data?.message ||
-        'Failed to add expense.'
-      );
+      setError(err.response?.data?.error || 'Failed to add expense.');
     } finally {
       setIsAdding(false);
     }
