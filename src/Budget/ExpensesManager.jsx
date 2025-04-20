@@ -106,16 +106,23 @@ export default function ExpensesManager({ onExpensesChange }) {
 
   // Handlers: Add
   const handleAddExpense = () => setIsAdding(true);
-  const handleAddSave = async (newExpense) => {
+  cconst handleAddSave = async (newExpense) => {
     try {
       const { data } = await apiAddExpense(newExpense);
+      // immediately update list
       const next = [...expenses, data];
       setExpenses(next);
       onExpensesChange?.(next);
+  
+      // show a little window and then reload
+      const points = Math.round(data.sustainabilityScore || 0);
+      alert(`🎉 Congratulations! You logged an expense and received ${points} eco‑points.`);
+      window.location.reload();
     } catch (err) {
       console.error('Error adding expense:', err);
+    } finally {
+      setIsAdding(false);
     }
-    setIsAdding(false);
   };
 
   // Handlers: Edit
