@@ -36,6 +36,8 @@
   overflow-y: auto; /* Enable scrolling for the modal/* Add this to AddExpense.css */
 }
 
+
+
 /* filers styling */
 
 .filters {
@@ -248,3 +250,57 @@ justify-content: center;
   --light: #ffffff;
   --shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
+
+/* --------------------------------------------
+   Center the Congratulations modal content
+   -------------------------------------------- */
+   .modal-content {
+    text-align: center;    /* center all headers, paragraphs & buttons */
+    padding: 2rem;
+  }
+  
+  /* ---------------------------------------------------
+     Restore your Edit / Remove buttons styling
+     --------------------------------------------------- */
+  .row-actions button {
+    background: var(--secondary);
+    color: var(--light);
+    border: none;
+    padding: 0.4rem 0.8rem;
+    margin: 0 0.3rem;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: background var(--transition), transform var(--transition), box-shadow var(--transition);
+  }
+  
+  .row-actions .edit-btn {
+    background: var(--accent);
+  }
+  
+  .row-actions .remove-btn {
+    background: #e74c3c;
+  }
+  
+  .row-actions button:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow);
+  }
+  
+  /* ----------------------------------------
+     Restore your “New” button styling
+     ---------------------------------------- */
+  .add-expense .add-btn {
+    background: var(--secondary);
+    color: var(--light);
+    border: none;
+    padding: 0.6rem 1.2rem;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: background var(--transition), transform var(--transition), box-shadow var(--transition);
+  }
+  
+  .add-expense .add-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow);
+  }
+  
