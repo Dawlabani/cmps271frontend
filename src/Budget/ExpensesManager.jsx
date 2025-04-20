@@ -12,24 +12,18 @@ import {
 } from '../services/api';
 import './ExpensesManager.css';
 
-
 export default function ExpensesManager({ onExpensesChange }) {
-  
-  // Local state instead of context
   const [expenses, setExpenses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showCongrats, setShowCongrats] = useState(false);
-  const [earnedPoints,  setEarnedPoints]  = useState(0);
+  const [earnedPoints, setEarnedPoints] = useState(0);
 
-
-  // Filtering & sorting state
   const [categoryFilter, setCategoryFilter] = useState('All');
   const [sortFilter, setSortFilter] = useState('Date');
   const [sortOrder, setSortOrder] = useState('Descending');
   const [currentPage, setCurrentPage] = useState(1);
   const [searchedExpense, setSearched] = useState('');
 
-  // Modal state
   const [isAdding, setIsAdding] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isRemoving, setIsRemoving] = useState(false);
@@ -38,7 +32,6 @@ export default function ExpensesManager({ onExpensesChange }) {
 
   const itemsPerPage = 10;
 
-  // Fetch expenses on mount
   useEffect(() => {
     setLoading(true);
     getExpenses()
@@ -50,7 +43,6 @@ export default function ExpensesManager({ onExpensesChange }) {
       .finally(() => setLoading(false));
   }, []);
 
-  // Show loading placeholder
   if (loading) {
     return (
       <motion.section
@@ -64,7 +56,6 @@ export default function ExpensesManager({ onExpensesChange }) {
     );
   }
 
-  // Sorting helper
   const sortExpenses = (arr, criteria, order) => {
     const sorted = [...arr];
     switch (criteria) {
@@ -89,7 +80,6 @@ export default function ExpensesManager({ onExpensesChange }) {
     return sorted;
   };
 
-  // Filter, search, paginate
   const searched = !searchedExpense
     ? expenses
     : expenses.filter(e =>
@@ -101,22 +91,30 @@ export default function ExpensesManager({ onExpensesChange }) {
     : searched.filter(e => (e.category?.name || 'Undefined') === categoryFilter);
 
   const sortedList = sortExpenses(filtered, sortFilter, sortOrder);
-  const totalPages = sortedList.length
-    ? Math.ceil(sortedList.length / itemsPerPage)
-    : 0;
+  const totalPages = sortedList.length ? Math.ceil(sortedList.length / itemsPerPage) : 0;
   const currentExpenses = sortedList.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
 
-  // Handlers: Add
   const handleAddExpense = () => setIsAdding(true);
   const handleAddSave = async form => {
     try {
-      const { data } = await apiAddExpense(form);
-      // update list
+      // flatten category into a string
+      const payload = {
+        date: form.date,
+        name: form.name,
+        cost: form.cost,
+        category: typeof form.category === 'object'
+          ? form.category.name
+          : form.category,
+        details: form.details
+      };
+      const { data } = await apiAddExpense(payload);
+
       setExpenses(e => [...e, data]);
-      // show modal
+      onExpensesChange?.(e => [...e, data]);
+
       setEarnedPoints(Math.round(data.sustainabilityScore || 0));
       setShowCongrats(true);
     } catch (err) {
@@ -126,31 +124,27 @@ export default function ExpensesManager({ onExpensesChange }) {
     }
   };
 
-  // Handlers: Edit
-  const handleEditExpense = (id) => {
-    const exp = expenses.find(e => e.id === id);
-    setExpenseToEdit(exp);
+  const handleEditExpense = id => {
+    setExpenseToEdit(expenses.find(e => e.id === id));
     setIsEditing(true);
   };
-  const handleEditSave = async (updated) => {
+  const handleEditSave = async updated => {
     try {
       const { data } = await apiUpdateExpense(updated.id, updated);
-      const next = expenses.map(e => e.id === data.id ? data : e);
-      setExpenses(next);
-      onExpensesChange?.(next);
+      setExpenses(expenses.map(e => e.id === data.id ? data : e));
+      onExpensesChange?.(expenses.map(e => e.id === data.id ? data : e));
     } catch (err) {
       console.error('Error updating expense:', err);
+    } finally {
+      setIsEditing(false);
     }
-    setIsEditing(false);
   };
 
-  // Handlers: Remove
-  const handleRemoveExpense = (id) => {
-    const exp = expenses.find(e => e.id === id);
-    setExpenseToRemove(exp);
+  const handleRemoveExpense = id => {
+    setExpenseToRemove(expenses.find(e => e.id === id));
     setIsRemoving(true);
   };
-  const handleRemoveSave = async (id) => {
+  const handleRemoveSave = async id => {
     try {
       await apiDeleteExpense(id);
       const next = expenses.filter(e => e.id !== id);
@@ -158,11 +152,11 @@ export default function ExpensesManager({ onExpensesChange }) {
       onExpensesChange?.(next);
     } catch (err) {
       console.error('Error removing expense:', err);
+    } finally {
+      setIsRemoving(false);
     }
-    setIsRemoving(false);
   };
 
-  // Controls
   const handlePreviousPage = () => currentPage > 1 && setCurrentPage(prev => prev - 1);
   const handleNextPage     = () => currentPage < totalPages && setCurrentPage(prev => prev + 1);
   const handleSearchChange = e => setSearched(e.target.value);
@@ -265,15 +259,8 @@ export default function ExpensesManager({ onExpensesChange }) {
         <button onClick={handleNextPage} disabled={currentPage === totalPages}>Next</button>
       </div>
 
-      {/* Modals */}
       <AnimatePresence>
-      {isAdding && (
-      <AddExpense
-      onAdd={handleAddSave}
-      onCancel={() => setIsAdding(false)}
-      />
-      )}
-
+        {isAdding && <AddExpense onAdd={handleAddSave} onCancel={() => setIsAdding(false)} />}
         {isEditing && expenseToEdit && (
           <EditExpense
             initialData={expenseToEdit}
@@ -287,35 +274,33 @@ export default function ExpensesManager({ onExpensesChange }) {
             onCancel={() => setIsRemoving(false)}
           />
         )}
+
+        {showCongrats && (
+          <motion.div
+            className="modal-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              className="modal-content"
+              initial={{ scale: 0.8 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0.8 }}
+              transition={{ duration: 0.3 }}
+            >
+              <h2>🎉 Congratulations!</h2>
+              <p>You earned <strong>{earnedPoints}</strong> eco‑points.</p>
+              <button
+                className="add-btn"
+                onClick={() => setShowCongrats(false)}
+              >
+                OK
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
       </AnimatePresence>
-      {showCongrats && (
-    <motion.div
-      className="modal-overlay"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-    >
-      <motion.div
-        className="modal-content"
-        initial={{ scale: 0.8 }}
-        animate={{ scale: 1 }}
-        exit={{ scale: 0.8 }}
-        transition={{ duration: 0.3 }}
-      >
-        <h2>🎉 Congratulations!</h2>
-        <p>You earned <strong>{earnedPoints}</strong> eco‑points.</p>
-        <button
-          className="add-btn"
-          onClick={() => {
-            setShowCongrats(false);
-            window.location.reload();
-          }}
-        >
-          OK
-        </button>
-      </motion.div>
-    </motion.div>
-  )} 
     </motion.section>
-  ); 
+  );
 }
