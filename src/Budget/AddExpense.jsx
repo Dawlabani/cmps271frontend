@@ -1,7 +1,8 @@
 // src/components/AddExpense.jsx
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import './AddExpense.css';
+import './AddExpense.css';// src/components/AddExpense.jsx
+
 
 function AddExpense({ onAdd, onCancel }) {
   const [formData, setFormData] = useState({
@@ -22,6 +23,7 @@ function AddExpense({ onAdd, onCancel }) {
     },
   });
   const [error, setError] = useState(null);
+  
 
   // Handle top-level fields (date, name, cost, category)
   const handleChange = (e) => {
@@ -81,8 +83,7 @@ function AddExpense({ onAdd, onCancel }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
-
-    // Validate fields
+  
     if (!formData.date || !formData.name || !formData.cost || !formData.category) {
       setError('Please fill out all required fields.');
       return;
@@ -95,11 +96,10 @@ function AddExpense({ onAdd, onCancel }) {
       setError('Please answer all required questions for this category.');
       return;
     }
-
+  
     try {
-      onAdd(response.data);
+      await onAdd(formData);
     } catch (err) {
-      console.error('Error adding expense:', err);
       setError(err.response?.data?.error || 'Failed to add expense.');
     }
   };
